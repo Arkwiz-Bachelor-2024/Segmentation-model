@@ -4,6 +4,7 @@
 #SBATCH --time=0-00:15:00         # format: D-HH:MM:SS
 
 #SBATCH --partition=GPUQ          # Asking for a GPU
+#SBATCH --constraint="v100|a100|p100" # Asks for a specific GPU
 #SBATCH --mem=16G                 # Asking for 16GB RAM
 #SBATCH --nodes=1
 #SBATCH --output=output.txt      # Specifying 'stdout'
@@ -45,10 +46,10 @@ echo "Total of $SLURM_NTASKS cores"
 # GPU acceleration modules
 module load CUDA/11.7.0
 module load cuDNN/8.4.1.50-CUDA-11.7.0
+module load Anaconda3/2023.09-0
 
 # Python and ML modules
 module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
-module load Python/3.10.8-GCCcore-12.2.0
 
 python ./utils/gpu_test.py
 
