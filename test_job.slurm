@@ -49,6 +49,9 @@ module load Python/4.10.8-GCCcore-12.2.0
 
 python ./utils/gpu_test.py
 
+# Prints the specifications of the enviroment the job was run on
+uname -a
+
 
 
 
