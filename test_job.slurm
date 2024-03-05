@@ -44,12 +44,16 @@ echo "Total of $SLURM_NTASKS cores"
 #* Modules
 
 # GPU acceleration modules
-module load CUDA/11.7.0
+module load CUDA/11.8.0
 module load cuDNN/8.4.1.50-CUDA-11.7.0
-module load Anaconda3/2023.09-0
 
 # Python and ML modules
 module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
+
+# Lists the modules loaded
+module list
+
+nvidia-smi
 
 python ./utils/gpu_test.py
 
