@@ -29,7 +29,6 @@
 #? Cancel job
 # scancel <job_id>
 
-
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR}
 echo "We are running from this directory: $SLURM_SUBMIT_DIR"
@@ -41,13 +40,14 @@ echo "We are using $SLURM_CPUS_ON_NODE cores"
 echo "We are using $SLURM_CPUS_ON_NODE cores per node"
 echo "Total of $SLURM_NTASKS cores"
 
-module purge
-
 # Running your python file
 module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
 module load Python/4.10.8-GCCcore-12.2.0
 
 python ./utils/gpu_test.py
+
+# Resets the enviroment maintaining idempotency
+module purge
 
 # Prints the specifications of the enviroment the job was run on
 uname -a
