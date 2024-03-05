@@ -16,6 +16,20 @@
 # TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
 # Python/3.10.8-GCCcore-12.2.0
 
+#* Running job
+
+#? Queues the job
+# sbatch <job_name>
+# Returns job_id    e.g <1891923>
+
+#? Check jobs queued
+# squeue -u <username> 
+# Returns table of jobs queued
+
+#? Cancel job
+# scancel <job_id>
+
+
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR}
 echo "We are running from this directory: $SLURM_SUBMIT_DIR"
