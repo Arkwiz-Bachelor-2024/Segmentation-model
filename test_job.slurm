@@ -4,7 +4,7 @@
 #SBATCH --time=0-00:15:00         # format: D-HH:MM:SS
 
 #SBATCH --partition=GPUQ          # Asking for a GPU
-#SBATCH --constraint="v100|a100|p100" # Asks for a specific GPU
+#SBATCH --constraint="v100|a100|p100" # Asks for a specific types of GPU
 #SBATCH --mem=16G                 # Asking for 16GB RAM
 #SBATCH --nodes=1
 #SBATCH --output=output.txt      # Specifying 'stdout'
@@ -13,11 +13,10 @@
 #SBATCH --mail-user=petteed@stud.ntnu.no
 #SBATCH --mail-type=ALL
 
-#* Required modules for ML 
-# TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
-# Python/3.10.8-GCCcore-12.2.0
 
-#* Running job
+
+
+#* Running jobs 
 
 #? Queues the job
 # sbatch <job_name>
@@ -44,16 +43,14 @@ echo "Total of $SLURM_NTASKS cores"
 #* Modules
 
 # GPU acceleration modules
+module load Anaconda3/2023.09-0
 module load CUDA/11.8.0
-module load cuDNN/8.4.1.50-CUDA-11.7.0
 
-# Python and ML modules
-module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
-
-# Lists the modules loaded
-module list
-
-nvidia-smi
+# Creates an Anaconda enviroment 
+conda create -n mlenv python=3.10
+# Activates the virtual enviroment 
+conda activate mytensorflowenv
+pip install tensorflow=2.12.0
 
 python ./utils/gpu_test.py
 
