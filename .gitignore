@@ -1,5 +1,10 @@
 # Div
 __pycache__
+ckpt
 
 # Dataset files
 /data
+
+# Log files
+output.txt
+errors.txt

@@ -9,7 +9,8 @@
 #SBATCH --nodes=1
 #SBATCH --output=output.txt       # Specifying 'stdout'
 #SBATCH --error=errors.txt        # Specifying 'stderr'
-#TODO Add mail
+
+#SBATCH --mail-user=petteed@stud.ntnu.no
 #SBATCH --mail-type=ALL
 
 #* Running jobs 
@@ -34,14 +35,21 @@ echo "---------------------------------------------------------"
 echo "The job was run on these nodes: $SLURM_JOB_NODELIST"
 echo "Number of nodes: $SLURM_JOB_NUM_NODES"
 echo "---------------------------------------------------------"
-echo "Number of GPUs: $SLURM_GPUS"
 
 #* Modules
-echo "---------------------------------------------------------"
-echo "Loading modules..."
 
 module load Python/3.10.4-GCCcore-11.3.0
 module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
+module load Anaconda3/2023.09-0 
+
+# Initializing virtual enviroment assuming it has been configured beforehand
+ENV_NAME=seg_model_env
+
+conda activate $ENV_NAME
+
+echo "---------------------------------------------------------"
+echo "Active Enviroment modules: "
+conda list -n seg_model_env 
 
 echo "---------------------------------------------------------"
 echo "GPU specifications:"

@@ -1,7 +1,3 @@
-#!/bin/sh
-# SBATCH --account=share-ie-idi
-#? Makes it so the job gets high priority in cluster
-
 import numpy as np
 import tensorflow as tf
 import keras
@@ -10,21 +6,25 @@ from natsort import natsorted
 # Directory scripts
 import models
 import pipeline
-import visualizer
-
 
 """
 This script serves as an application for utilizing images and masks to create a semantic segmentation model based upon given specifications. 
 
 """
+#* Check if GPU acceleration is available
+# Check available GPUs
+gpus = tf.config.list_physical_devices("GPU")
+
+# Print the list of available GPUs
+print("GPUs Available: ", gpus)
 
 # * Hyperparameters
 
 # Model
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 4
-EPOCHS = 1
+BATCH_SIZE = 8
+EPOCHS = 2
 
 # * Metrics
 mean_over_intersection = keras.metrics.MeanIoU(
@@ -44,8 +44,8 @@ METRIC = mean_over_intersection
 MAX_NUMBER_SAMPLES = 20
 
 # Trainig set
-training_img_dir = "img/train"
-training_mask_dir = "masks/train"
+training_img_dir = "data/img/train"
+training_mask_dir = "data/masks/train"
 training_dataset = pipeline.get_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=training_img_dir,
@@ -54,8 +54,8 @@ training_dataset = pipeline.get_dataset_from_directory(
 )
 
 # Validation set
-validation_img_dir = "img/val"
-validation_mask_dir = "masks/val"
+validation_img_dir = "data/img/val"
+validation_mask_dir = "data/masks/val"
 validation_dataset = pipeline.get_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=validation_img_dir,
@@ -64,8 +64,8 @@ validation_dataset = pipeline.get_dataset_from_directory(
 )
 
 # Test set
-test_img_dir = "img/test"
-test_mask_dir = "masks/test"
+test_img_dir = "data/img/test"
+test_mask_dir = "data/masks/test"
 test_dataset = pipeline.get_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=test_img_dir,
@@ -77,7 +77,8 @@ test_dataset = pipeline.get_dataset_from_directory(
 model = models.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
 model.compile(
-    optimizer=keras.optimizers.Adam(1e-4), loss="sparse_categorical_crossentropy"
+    optimizer=keras.optimizers.Adam(1e-4), loss="sparse_categorical_crossentropy",
+    metrics=METRIC
 )
 
 # Callback for saving weights
@@ -89,6 +90,7 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     verbose=1,
     save_best_only=True,
 )
+
 
 
 # Fit the model
