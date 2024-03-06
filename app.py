@@ -1,8 +1,3 @@
-#!/bin/sh
-# SBATCH --account=share-ie-idi
-
-# ? Makes it so the jobs get executed faster cause of priority.
-
 # from cv2 import applyColorMap
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
