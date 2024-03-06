@@ -1,17 +1,11 @@
 #!/bin/sh
 # SBATCH --account=share-ie-idi
+#? Makes it so the job gets high priority in cluster
 
-# ? Makes it so the jobs get executed faster cause of priority.
-
-# from cv2 import applyColorMap
-from matplotlib import pyplot as plt
-import matplotlib.colors as mcolors
 import numpy as np
 import tensorflow as tf
 import keras
 from natsort import natsorted
-import matplotlib.patches as mpatches
-import plotly.graph_objects as go
 
 # Directory scripts
 import models
@@ -28,7 +22,6 @@ This script serves as an application for utilizing images and masks to create a 
 
 # Model
 IMG_SIZE = (512, 512)
-# TODO sjekk mengden klasser
 NUM_CLASSES = 5
 BATCH_SIZE = 4
 EPOCHS = 1

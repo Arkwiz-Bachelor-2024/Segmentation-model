@@ -1,8 +1,5 @@
-# Dataset files
-/img
-/masks
-
-
-
 # Div
 __pycache__
+
+# Dataset files
+/data
