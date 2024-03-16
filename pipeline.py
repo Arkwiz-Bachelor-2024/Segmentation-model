@@ -14,7 +14,7 @@ from tensorflow import io as tf_io
 from tensorflow import image as tf_image
 
 
-def decode_dataset(input_img_path, target_img_path):
+def __decode_dataset__(input_img_path, target_img_path):
     """
     Rescales,resizes and decodes an image and its respective mask to a tensor.
 
@@ -44,7 +44,8 @@ def get_dataset_from_paths(
     max_dataset_len=None,
 ):
     """
-    Returns a datset batch of given batch size based upon given paths.
+    Returns an array sequentially containing the datset batch of given batch size based upon given paths along with
+    the path of the input and target images.
 
     """
 
@@ -54,7 +55,7 @@ def get_dataset_from_paths(
         target_img_paths = target_img_paths[:max_dataset_len]
 
     dataset = tf_data.Dataset.from_tensor_slices((input_img_paths, target_img_paths))
-    dataset = dataset.map(decode_dataset, num_parallel_calls=tf_data.AUTOTUNE)
+    dataset = dataset.map(__decode_dataset__, num_parallel_calls=tf_data.AUTOTUNE)
 
     return dataset.batch(batch_size)
 
@@ -70,8 +71,8 @@ def get_dataset_from_directory(
 
     """
 
-    input_img_paths = sort_directory(input_img_dir)
-    target_img_paths = sort_directory(target_img_dir)
+    input_img_paths = __sort_directory__(input_img_dir)
+    target_img_paths = __sort_directory__(target_img_dir)
 
     # For faster debugging, limits the size of data
     if max_dataset_len:
@@ -79,12 +80,12 @@ def get_dataset_from_directory(
         target_img_paths = target_img_paths[:max_dataset_len]
 
     dataset = tf_data.Dataset.from_tensor_slices((input_img_paths, target_img_paths))
-    dataset = dataset.map(decode_dataset, num_parallel_calls=tf_data.AUTOTUNE)
+    dataset = dataset.map(__decode_dataset__, num_parallel_calls=tf_data.AUTOTUNE)
 
-    return dataset.batch(batch_size)
+    return dataset.batch(batch_size), input_img_paths, target_img_paths
 
 
-def sort_directory(input_dir):
+def __sort_directory__(input_dir):
     """
     Extracts files from a directory into a naturally sorted array.
 
