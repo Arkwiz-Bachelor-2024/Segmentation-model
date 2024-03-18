@@ -30,7 +30,7 @@ training_dataset = get_dataset_from_directory(
     max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 training_dataset_batch = training_dataset[0]
-training_dataset_img_paths = training_dataset[2]
+training_dataset_img_paths = training_dataset[1]
 training_dataset_target_paths = training_dataset[2]
 
 

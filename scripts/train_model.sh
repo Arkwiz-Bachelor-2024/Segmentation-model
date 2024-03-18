@@ -1,12 +1,14 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
-#SBATCH --job-name=GPU_test
-#SBATCH --time=0-00:15:00         # format: D-HH:MM:SS
+#SBATCH --job-name=small_seg_model
+
+#SBATCH --time=0-01:00:00         # format: D-HH:MM:SS
 #SBATCH --partition=GPUQ          # Asking for a GPU
 #SBATCH --gres=gpu:1              # Number of GPUS
-#SBATCH --constraint="gpu16g"     # Type of GPU
-#SBATCH --mem=1G                  # Asking for 16GB RAM
+#SBATCH --constraint="gpu40g"     # Type of GPU
+#SBATCH --mem=20G                 # Asking for 20GB RAM
 #SBATCH --nodes=1
+
 #SBATCH --output=output.txt       # Specifying 'stdout'
 #SBATCH --error=errors.txt        # Specifying 'stderr'
 
@@ -38,18 +40,10 @@ echo "---------------------------------------------------------"
 
 #* Modules
 
-module load Python/3.10.4-GCCcore-11.3.0
-module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
-module load Anaconda3/2023.09-0 
+module load TensorFlow/2.13.0-foss-2023a
+module load CUDA/11.8.0 
 
-# Initializing virtual enviroment assuming it has been configured beforehand
-ENV_NAME=seg_model_env
-
-conda activate $ENV_NAME
-
-echo "---------------------------------------------------------"
-echo "Active Enviroment modules: "
-conda list -n seg_model_env 
+pip install --user natsort
 
 echo "---------------------------------------------------------"
 echo "GPU specifications:"
@@ -57,11 +51,31 @@ nvidia-smi
 echo "---------------------------------------------------------"
 
 echo "Running script.."
-python ./utils/gpu_test.py
+echo "---------------------------------------------------------"
+python app.py
 echo "---------------------------------------------------------"
 
+echo "Script completed"
 # Resets the enviroment maintaining idempotency
 module purge
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

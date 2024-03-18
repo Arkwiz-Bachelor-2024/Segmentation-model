@@ -8,19 +8,24 @@ from natsort import natsorted
 import models
 import pipeline
 
-
 """
 This script serves as an application for utilizing images and masks to create a semantic segmentation model based upon given specifications. 
 
 """
+# * Check if GPU acceleration is available
+# Check available GPUs
+gpus = tf.config.list_physical_devices("GPU")
+
+# Print the list of available GPUs
+print("GPUs Available: ", gpus)
 
 # * Hyperparameters
 
 # Model
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 4
-EPOCHS = 1
+BATCH_SIZE = 8
+EPOCHS = 2
 
 # * Metrics
 mean_over_intersection = keras.metrics.MeanIoU(
@@ -39,7 +44,7 @@ METRIC = mean_over_intersection
 
 MAX_NUMBER_SAMPLES = 20
 
-# Training set
+# Trainig set
 training_img_dir = "data/img/train"
 training_mask_dir = "data/masks/train"
 training_dataset = pipeline.get_dataset_from_directory(

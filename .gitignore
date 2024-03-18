@@ -1,7 +1,11 @@
+# Div
+__pycache__
+ckpt
+
 # Dataset files
 /data
 /models
 
-
-# Div
-__pycache__
+# Log files
+output.txt
+errors.txt
