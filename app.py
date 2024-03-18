@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-import keras
+from tensorflow import keras
 from natsort import natsorted
 
 # Directory scripts
@@ -26,15 +26,10 @@ NUM_CLASSES = 5
 BATCH_SIZE = 8
 EPOCHS = 2
 
+
 # * Metrics
-mean_over_intersection = keras.metrics.MeanIoU(
-    NUM_CLASSES,
-    name=None,
-    dtype=None,
-    ignore_class=None,
-    sparse_y_true=True,
-    sparse_y_pred=True,
-)
+
+mean_over_intersection = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
 
 METRIC = mean_over_intersection
 
@@ -78,19 +73,26 @@ model = models.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
 model.compile(
     optimizer=keras.optimizers.Adam(1e-4), loss="sparse_categorical_crossentropy",
-    metrics=METRIC
 )
 
 # Callback for saving weights
-CHECKPOINT_FILEPATH = "./ckpt/checkpoint.model.keras"
+CHECKPOINT_FILEPATH = "./models/model.keras"
 model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=CHECKPOINT_FILEPATH,
-    monitor=METRIC,
-    mode="max",
+    monitor="val_loss",
+    mode="min",
     verbose=1,
     save_best_only=True,
 )
 
+print("---------------------------------------------------------------------------------------------------")
+
+print("Data shape")
+# Shapes of the data
+for x, y in training_dataset.take(1):
+    print(x.shape, y.shape)
+
+print("---------------------------------------------------------------------------------------------------")
 
 
 # Fit the model
@@ -99,9 +101,11 @@ model.fit(
     epochs=EPOCHS,
     callbacks=model_checkpoint_callback,
     validation_data=validation_dataset,
-    verbose=1,
+    verbose=2,
 )
 
-predictions = model.predict(training_dataset)
+print("---------------------------------------------------------------------------------------------------")
 
-print(predictions)
+print("Predictions: ")
+
+print(predictions.shape)

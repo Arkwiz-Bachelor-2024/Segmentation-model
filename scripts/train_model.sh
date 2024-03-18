@@ -17,7 +17,7 @@
 
 #* Running jobs 
 #? Queues the job
-# sbatch <job_name>
+# sbatch <job_name> test
 # Returns job_id    e.g <1891923>
 
 #? Check jobs queued
@@ -40,10 +40,7 @@ echo "---------------------------------------------------------"
 
 #* Modules
 
-module load TensorFlow/2.13.0-foss-2023a
-module load CUDA/11.8.0 
-
-pip install --user natsort
+module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
 
 echo "---------------------------------------------------------"
 echo "GPU specifications:"
@@ -52,10 +49,15 @@ echo "---------------------------------------------------------"
 
 echo "Running script.."
 echo "---------------------------------------------------------"
+
+python ./utils/gpu_test.py
+
+echo "---------------------------------------------------------"
 python app.py
 echo "---------------------------------------------------------"
 
 echo "Script completed"
+
 # Resets the enviroment maintaining idempotency
 module purge
 
