@@ -1,10 +1,10 @@
 # Div
 __pycache__
 ckpt
-models
 
 # Dataset files
 /data
+/models
 
 # Log files
 output.txt

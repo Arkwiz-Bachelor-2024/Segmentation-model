@@ -1,3 +1,4 @@
+# from cv2 import applyColorMap
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -11,7 +12,7 @@ import pipeline
 This script serves as an application for utilizing images and masks to create a semantic segmentation model based upon given specifications. 
 
 """
-#* Check if GPU acceleration is available
+# * Check if GPU acceleration is available
 # Check available GPUs
 gpus = tf.config.list_physical_devices("GPU")
 
@@ -47,6 +48,9 @@ training_dataset = pipeline.get_dataset_from_directory(
     target_img_dir=training_mask_dir,
     max_dataset_len=MAX_NUMBER_SAMPLES,
 )
+training_dataset_batch = training_dataset[0]
+training_dataset_img_paths = training_dataset[2]
+training_dataset_target_paths = training_dataset[2]
 
 # Validation set
 validation_img_dir = "data/img/val"
@@ -57,6 +61,10 @@ validation_dataset = pipeline.get_dataset_from_directory(
     target_img_dir=validation_mask_dir,
     max_dataset_len=MAX_NUMBER_SAMPLES,
 )
+validation_dataset_batch = validation_dataset[0]
+validation_dataset_img_paths = validation_dataset[1]
+validation_dataset_target_paths = validation_dataset[2]
+
 
 # Test set
 test_img_dir = "data/img/test"
@@ -67,12 +75,24 @@ test_dataset = pipeline.get_dataset_from_directory(
     target_img_dir=test_mask_dir,
     max_dataset_len=MAX_NUMBER_SAMPLES,
 )
+test_dataset_batch = training_dataset[0]
+test_dataset_img_paths = training_dataset[1]
+test_dataset_target_paths = training_dataset[2]
+
+
+# Test set
 
 # Creates the model itself
 model = models.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
 model.compile(
+<<<<<<< HEAD
     optimizer=keras.optimizers.Adam(1e-4), loss="sparse_categorical_crossentropy",
+=======
+    optimizer=keras.optimizers.Adam(1e-4),
+    loss="sparse_categorical_crossentropy",
+    metrics=METRIC,
+>>>>>>> 04cacbf37af053afc72ab099b2e5408190a1164b
 )
 
 # Callback for saving weights
@@ -85,6 +105,7 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     save_best_only=True,
 )
 
+<<<<<<< HEAD
 print("---------------------------------------------------------------------------------------------------")
 
 print("Data shape")
@@ -95,6 +116,8 @@ for x, y in training_dataset.take(1):
 print("---------------------------------------------------------------------------------------------------")
 
 
+=======
+>>>>>>> 04cacbf37af053afc72ab099b2e5408190a1164b
 # Fit the model
 model.fit(
     training_dataset,
