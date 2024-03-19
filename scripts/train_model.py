@@ -5,8 +5,8 @@ import keras
 from natsort import natsorted
 
 # Directory scripts
-import models
-import pipeline
+import modules.model_architectures as model_architectures
+import modules.pipeline as pipeline
 
 """
 This script serves as an application for utilizing images and masks to create a semantic segmentation model based upon given specifications. 
@@ -53,9 +53,9 @@ training_dataset = pipeline.get_dataset_from_directory(
     target_img_dir=training_mask_dir,
     max_dataset_len=MAX_NUMBER_SAMPLES,
 )
-training_dataset_batch = training_dataset[0]
-training_dataset_img_paths = training_dataset[2]
-training_dataset_target_paths = training_dataset[2]
+# training_dataset_batch = training_dataset[0]
+# training_dataset_img_paths = training_dataset[2]
+# training_dataset_target_paths = training_dataset[2]
 
 # Validation set
 validation_img_dir = "data/img/val"
@@ -66,9 +66,9 @@ validation_dataset = pipeline.get_dataset_from_directory(
     target_img_dir=validation_mask_dir,
     max_dataset_len=MAX_NUMBER_SAMPLES,
 )
-validation_dataset_batch = validation_dataset[0]
-validation_dataset_img_paths = validation_dataset[1]
-validation_dataset_target_paths = validation_dataset[2]
+# validation_dataset_batch = validation_dataset[0]
+# validation_dataset_img_paths = validation_dataset[1]
+# validation_dataset_target_paths = validation_dataset[2]
 
 
 # Test set
@@ -80,15 +80,15 @@ test_dataset = pipeline.get_dataset_from_directory(
     target_img_dir=test_mask_dir,
     max_dataset_len=MAX_NUMBER_SAMPLES,
 )
-test_dataset_batch = training_dataset[0]
-test_dataset_img_paths = training_dataset[1]
-test_dataset_target_paths = training_dataset[2]
+# test_dataset_batch = training_dataset[0]
+# test_dataset_img_paths = training_dataset[1]
+# test_dataset_target_paths = training_dataset[2]
 
 
 # Test set
 
 # Creates the model itself
-model = models.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
+model = model_architectures.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
 model.compile(
     optimizer=keras.optimizers.Adam(1e-4),
@@ -118,3 +118,15 @@ model.fit(
 predictions = model.predict(training_dataset)
 
 print(predictions)
+
+mask = np.argmax(predictions[1], axis=-1)
+
+# Flatten the predicted_mask to make it a 1D array, since we're interested in the global distribution
+flat_predicted_mask = mask.flatten()
+
+# Get unique classes and their counts
+classes, counts = np.unique(flat_predicted_mask, return_counts=True)
+
+# To see the distribution, you can print it or store it in a dictionary
+class_distribution = dict(zip(classes, counts))
+print("Class distribution in the predicted output:", class_distribution)
