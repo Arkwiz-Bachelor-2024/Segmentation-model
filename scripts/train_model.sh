@@ -1,12 +1,12 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
-#SBATCH --job-name=small_seg_model
+#SBATCH --job-name=model_training_4
 
-#SBATCH --time=0-01:00:00         # format: D-HH:MM:SS
+#SBATCH --time=0-03:00:00         # format: D-HH:MM:SS
 #SBATCH --partition=GPUQ          # Asking for a GPU
 #SBATCH --gres=gpu:1              # Number of GPUS
 #SBATCH --constraint="gpu40g"     # Type of GPU
-#SBATCH --mem=20G                 # Asking for 20GB RAM
+#SBATCH --mem=40G                 # Asking for RAM
 #SBATCH --nodes=1
 
 #SBATCH --output=output.txt       # Specifying 'stdout'
@@ -48,12 +48,9 @@ nvidia-smi
 echo "---------------------------------------------------------"
 
 echo "Running script.."
-echo "---------------------------------------------------------"
-
-python ./utils/gpu_test.py
 
 echo "---------------------------------------------------------"
-python app.py
+python train_model.py
 echo "---------------------------------------------------------"
 
 echo "Script completed"

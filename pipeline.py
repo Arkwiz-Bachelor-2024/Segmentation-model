@@ -82,7 +82,7 @@ def get_dataset_from_directory(
     dataset = tf_data.Dataset.from_tensor_slices((input_img_paths, target_img_paths))
     dataset = dataset.map(__decode_dataset__, num_parallel_calls=tf_data.AUTOTUNE)
 
-    return dataset.batch(batch_size), input_img_paths, target_img_paths
+    return dataset.batch(batch_size)
 
 
 def __sort_directory__(input_dir):
