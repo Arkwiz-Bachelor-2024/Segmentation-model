@@ -41,6 +41,11 @@ dataset = get_dataset_from_directory(
 # training_dataset_img_paths = training_dataset[1]
 # training_dataset_target_paths = training_dataset[2]
 
+
+# Notable images
+# Urban - data/img/test/N-33-130-A-d-4-4_249.jpg
+# 865
+
 colors = [
     (1, 1, 1),
     (1, 0, 0),

@@ -4,6 +4,11 @@ import tensorflow as tf
 import keras
 from natsort import natsorted
 
+
+# Imports the root directory to the path in order to import project modules
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, project_root)
+
 # Directory scripts
 import modules.model_architectures as model_architectures
 import modules.pipeline as pipeline
@@ -26,19 +31,6 @@ IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
 BATCH_SIZE = 8
 EPOCHS = 2
-
-# * Metrics
-mean_over_intersection = keras.metrics.MeanIoU(
-    NUM_CLASSES,
-    name=None,
-    dtype=None,
-    ignore_class=None,
-    sparse_y_true=True,
-    sparse_y_pred=True,
-)
-
-METRIC = mean_over_intersection
-
 
 # * Datasets
 
