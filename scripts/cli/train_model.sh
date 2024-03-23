@@ -6,7 +6,11 @@
 #SBATCH --partition=GPUQ          # Asking for a GPU
 #SBATCH --gres=gpu:1              # Number of GPUS
 #SBATCH --constraint="gpu40g"     # Type of GPU
+<<<<<<< HEAD:scripts/train_model.sh
 #SBATCH --mem=40G                 # Asking for RAM
+=======
+#SBATCH --mem=30G                 # Asking for 20GB RAM
+>>>>>>> bef75139884aa5ddc38a13c8e9de2bc8b5d43959:scripts/cli/train_model.sh
 #SBATCH --nodes=1
 
 #SBATCH --output=output.txt       # Specifying 'stdout'
@@ -40,7 +44,13 @@ echo "---------------------------------------------------------"
 
 #* Modules
 
+<<<<<<< HEAD:scripts/train_model.sh
 module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
+=======
+module load TensorFlow/2.13.0-foss-2023a
+
+pip install --user natsort
+>>>>>>> bef75139884aa5ddc38a13c8e9de2bc8b5d43959:scripts/cli/train_model.sh
 
 echo "---------------------------------------------------------"
 echo "GPU specifications:"

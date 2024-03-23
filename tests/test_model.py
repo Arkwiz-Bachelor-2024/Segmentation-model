@@ -3,11 +3,11 @@ import sys
 import os
 import numpy as np
 
-# Imports the root directory based on the location of this file.
+# Imports the root directory to the path in order to import project modules
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
-from pipeline import get_dataset_from_directory
+from modules.pipeline import get_dataset_from_directory
 
 # Path to your saved model
 model_path = "./models/checkpoint.model.keras"
