@@ -10,7 +10,7 @@ https://keras.io/examples/vision/oxford_pets_image_segmentation/
 """
 
 
-# TODO implement dice-loss, resnet backbone, data augmentaiton,deeplab v3+
+# TODO implement dice-loss, resnet backbone, data augmentaiton,deeplab v3+, dropout???
 def get_UNET_model(img_size, num_classes):
     inputs = keras.Input(shape=img_size + (3,))
 
