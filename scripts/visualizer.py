@@ -3,43 +3,41 @@ Module which offers ways to visualize the datset and the predictions made by the
 
 """
 
-import keras
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
 import sys
 import os
-
-from matplotlib.colors import ListedColormap
 
 # Imports the root directory to the path in order to import project modules
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
-from modules.pipeline import get_dataset_from_directory
+import keras
+import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+from modules.metrics import get_class_distribution
+from modules.metrics import get_mIOU
+from modules.metrics import get_OA
+from matplotlib.colors import ListedColormap
+from modules.pipeline import Pipeline
+from modules.crf import conditional_random_field
 
 # * Model
-
-# Path to your saved model
 model_path = "./models/10epoch_32b.keras"
-
-# Load the model
 model = keras.models.load_model(model_path)
-
 
 # * Dataset
 
 BATCH_SIZE = 1
-img_dir = "data/img/train"
-target_img_dir = "data/masks/train"
-dataset = get_dataset_from_directory(
+img_dir = "data/img/test"
+target_img_dir = "data/masks/test"
+pipeline = Pipeline()
+dataset = pipeline.get_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=img_dir,
     target_img_dir=target_img_dir,
+    # max_dataset_len=20,
 )
-# training_dataset_batch = training_dataset[0]
-# training_dataset_img_paths = training_dataset[1]
-# training_dataset_target_paths = training_dataset[2]
 
 colors = [
     (1, 1, 1),
@@ -50,103 +48,94 @@ colors = [
 ]  # White, Red, Green, Blue, Gray
 cmap = ListedColormap(colors)
 
-import pydensecrf.densecrf as dcrf
-from pydensecrf.utils import (
-    unary_from_softmax,
-    create_pairwise_bilateral,
-    create_pairwise_gaussian,
-)
 
-image_number = 4000
+def display_images(titles, images, descriptions, color_map):
+    """
+    Displays images with their individual titles and array of descriptions.
 
+    Parameters:
+    - titles: list of str, titles for each image.
+    - images: list of ndarray, image data in a format compatible with plt.imshow.
+    - descriptions: list of list of str, each list contains parts of the description for each image.
+    """
+    if not images or not descriptions or not titles:
+        raise ValueError("Titles, images, and descriptions must be non-empty lists.")
+
+    if len(images) != len(descriptions) or len(images) != len(titles):
+        raise ValueError(
+            "Titles, images, and descriptions must be lists of the same length."
+        )
+
+    num_images = len(images)
+    plt.figure(figsize=(15, 8))
+
+    for i in range(num_images):
+        plt.subplot(2, 2, i + 1)
+        # Shortcut
+        if images[i].shape[-1] > 10:
+            plt.imshow(images[i], cmap=color_map)
+        else:
+            plt.imshow(images[i])
+        plt.title(titles[i])
+        plt.axis("off")
+
+        # Join the array of details into a single string with line breaks.
+        description_text = "\n".join(descriptions[i])
+
+        # Adding the description text below the image
+        plt.text(
+            0.5,
+            -0.1,
+            description_text,
+            transform=plt.gca().transAxes,
+            ha="center",
+            va="top",
+            fontsize=8,
+        )
+
+    plt.tight_layout()
+    plt.show()
+
+
+image_number = 4
 # Operation per batch in dataset
-for images, masks in dataset.skip(image_number - 1).take(20):
+for images, masks in dataset.skip(image_number - 1).take(1):
     # Select the first example of the batch
     image = images[0]
     mask = masks[0]
 
     # Masks
-    image_with_batch = tf.expand_dims(image, axis=0)
-    pred_mask = model.predict(image_with_batch)
+    image_with_batch = np.expand_dims(image, axis=0)
 
-    # Assuming `image` is your input image in [0, 255] and `pred_mask_logits` are the logits from your model.
-    d = dcrf.DenseCRF2D(
-        image.shape[1], image.shape[0], pred_mask.shape[-1]
-    )  # Width, Height, NClasses
+    pred_mask_probs = model.predict(image_with_batch)
 
-    pred_mask_probs = np.ascontiguousarray(pred_mask)
-
-    pred_mask_probs = np.transpose(
-        pred_mask.squeeze(), (2, 0, 1)
-    )  # Now shape [num_classes, height, width]
-
-    pred_mask_probs = np.ascontiguousarray(pred_mask_probs)
-
-    # Now, use this correctly shaped array for unary energies
-    U = unary_from_softmax(pred_mask_probs)
-    d.setUnaryEnergy(U)
-
-    # Optionally, add pairwise energy terms to enforce smoothness.
-    feats = create_pairwise_gaussian(sdims=(3, 3), shape=image.shape[:2])
-    d.addPairwiseEnergy(feats, compat=3)
-
-    feats = create_pairwise_bilateral(
-        sdims=(80, 80), schan=(13, 13, 13), img=image.numpy(), chdim=2
+    crf_mask = conditional_random_field(
+        image=image.numpy(), pred_mask_probs=pred_mask_probs, inference_iterations=5
     )
-    d.addPairwiseEnergy(feats, compat=10)
-
-    # Perform inference to get the refined segmentation.
-    Q = d.inference(5)
-
-    # `map_soln` is now your refined segmentation mask.
-    crf_mask = np.argmax(Q, axis=0).reshape(image.shape[:2])
 
     # Raw mask
-    pred_mask = np.argmax(pred_mask, axis=-1)
-    pred_mask = pred_mask[0]
+    pred_mask = np.argmax(pred_mask_probs.squeeze(), axis=-1)
+    print(pred_mask.shape)
     mask = tf.squeeze(mask)
+    mask = mask.numpy()
 
-    # mIOU metric
-    meanIOU_pred = keras.metrics.MeanIoU(num_classes=5)
-    meanIOU_pred.update_state(y_true=mask, y_pred=pred_mask)
-    meanIOU_pred_score = round(meanIOU_pred.result().numpy(), 2)
-
-    meanIOU_crf = keras.metrics.MeanIoU(num_classes=5)
-    meanIOU_crf.update_state(y_true=mask, y_pred=crf_mask)
-    meanIOU_crf_score = round(meanIOU_crf.result().numpy(), 2)
-
-    print("Prediction details:")
     print("----------------------------------------------------------------------")
-    print("MeanIOU pred_score: ", meanIOU_pred_score)
-    print("MeanIOU crf_score: ", meanIOU_crf_score)
+    print("Image details(shape, type):")
+    print("Image", image.shape, type(image))
+    print("Mask", mask.shape, type(mask))
+    print("Pred_mask", pred_mask.shape, type(pred_mask))
+    print("CRF_mask", crf_mask.shape, type(crf_mask))
     print("----------------------------------------------------------------------")
 
-    # Calculate class distribution percentages for ground truth
-    total_pixels = mask.numpy().size
-    gt_classes, gt_counts = np.unique(mask.numpy(), return_counts=True)
-    gt_distribution_percentages = {
-        cls: count / total_pixels for cls, count in zip(gt_classes, gt_counts)
-    }
+    meanIOU_crf_score = get_mIOU(mask, crf_mask, mask.shape[-1])
+    meanIOU_pred_score = get_mIOU(mask, pred_mask, mask.shape[-1])
 
-    # Calculate class distribution percentages for predicted mask
-    pred_classes, pred_counts = np.unique(pred_mask, return_counts=True)
-    pred_distribution_percentages = {
-        cls: count / total_pixels for cls, count in zip(pred_classes, pred_counts)
-    }
+    OA_pred = get_OA(mask, pred_mask)
+    OA_crf = get_OA(mask, crf_mask)
 
-    # Calculate class distribution percentages for crf mask
-    crf_classes, crf_counts = np.unique(crf_mask, return_counts=True)
-    crf_distribution_percentages = {
-        cls: count / total_pixels for cls, count in zip(crf_classes, crf_counts)
-    }
-
-    # Calculate accuracy (percentage of correct labels)
-    correct_predictions_pred = np.sum(mask.numpy() == pred_mask)
-    correct_predictions_crf = np.sum(mask.numpy() == crf_mask)
-
-    pred_accuracy = correct_predictions_pred / total_pixels
-    crf_accuracy = correct_predictions_crf / total_pixels
-    # Display the ground truth mask
+    gt_distribution_percentages = get_class_distribution(image=mask)
+    pred_distribution_percentages = get_class_distribution(image=pred_mask)
+    crf_distribution_percentages = get_class_distribution(image=crf_mask)
 
     gt_distribution_str = ", ".join(
         [
@@ -154,16 +143,12 @@ for images, masks in dataset.skip(image_number - 1).take(20):
             for cls, percent in gt_distribution_percentages.items()
         ]
     )
-
-    # Display the predicted mask
     pred_distribution_str = ", ".join(
         [
             f"{cls}: {percent:.2%}"
             for cls, percent in pred_distribution_percentages.items()
         ]
     )
-
-    # Display the predicted mask
     crf_distribution_str = ", ".join(
         [
             f"{cls}: {percent:.2%}"
@@ -171,52 +156,43 @@ for images, masks in dataset.skip(image_number - 1).take(20):
         ]
     )
 
-    # Plot the image, ground truth, and prediction with distribution percentages
-    plt.figure(figsize=(15, 8))
+    print("Prediction details:")
+    print("----------------------------------------------------------------------")
+    print("MeanIOU pred_score: ", meanIOU_pred_score)
+    print("MeanIOU crf_score: ", meanIOU_crf_score)
+    print("----------------------------------------------------------------------")
 
-    # Display the original image
-    plt.subplot(2, 2, 1)
-    plt.title("Image")
-    plt.imshow(image)  # Adjust for proper data type if necessary
-    plt.axis("off")
+    plot_images = [image, mask, pred_mask, crf_mask]
+    plot_titles = [
+        f"Image\n {pipeline.input_img_paths[image_number]}",
+        "Ground truth",
+        "Prediction mask",
+        "CRF mask",
+    ]
 
-    plt.subplot(2, 2, 2)
-    plt.title(f"Ground Truth")
-    plt.text(
-        0.5,
-        -0.1,
-        f"Distribution: {gt_distribution_str}\n",
-        ha="center",
-        va="top",
-        transform=plt.gca().transAxes,
+    plot_image_details = []
+    plot_mask_details = [f"Class Distribution: {gt_distribution_str}"]
+    plot_pred_mask_details = [
+        f"Class Distribution: {pred_distribution_str}",
+        f"mIOU: {meanIOU_pred_score:.2} ",
+        f"OA: {OA_pred:.2}",
+    ]
+    plot_crf_mask_details = [
+        f"Class Distribution: {crf_distribution_str}",
+        f"mIOU: {meanIOU_crf_score:.2} ",
+        f"OA: {OA_crf:.2}",
+    ]
+
+    plot_description = [
+        plot_image_details,
+        plot_mask_details,
+        plot_pred_mask_details,
+        plot_crf_mask_details,
+    ]
+
+    display_images(
+        titles=plot_titles,
+        images=plot_images,
+        descriptions=plot_description,
+        color_map=cmap,
     )
-    plt.imshow(mask.numpy(), cmap=cmap, vmin=0, vmax=len(colors) - 1)
-    plt.axis("off")
-
-    plt.subplot(2, 2, 3)
-    plt.title(f"Predicted Mask")
-    plt.imshow(pred_mask, cmap=cmap, vmin=0, vmax=len(colors) - 1)
-    plt.text(
-        0.5,
-        -0.1,
-        f"Overall Accuracy: {pred_accuracy:.2%}\n\nMeanIOU: {meanIOU_pred_score:.2}\n\nPred-Distribution: {pred_distribution_str}",
-        ha="center",
-        va="top",
-        transform=plt.gca().transAxes,
-    )
-    plt.axis("off")
-
-    plt.subplot(2, 2, 4)
-    plt.title(f"CRF")
-    plt.imshow(crf_mask, cmap=cmap, vmin=0, vmax=len(colors) - 1)
-    plt.text(
-        0.5,
-        -0.1,
-        f"Overall Accuracy: {crf_accuracy:.2%}\n\nMeanIOU: {meanIOU_crf_score:.2}\n\nPred-Distribution: {crf_distribution_str}",
-        ha="center",
-        va="top",
-        transform=plt.gca().transAxes,
-    )
-    plt.axis("off")
-    plt.tight_layout()
-    plt.show()
