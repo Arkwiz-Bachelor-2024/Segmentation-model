@@ -18,8 +18,10 @@ from tensorflow import image as tf_image
 class Pipeline:
 
     def __init__(self):
-        self.input_img_paths = []
-        self.target_img_paths = []
+        self.input_img_paths = None
+        self.target_img_paths = None
+        self.dataset = None
+        self.batch_size = None
 
     def get_dataset_from_paths(
         self,
@@ -48,7 +50,28 @@ class Pipeline:
 
         return dataset.batch(batch_size)
 
-    def get_dataset_from_directory(
+    def get_sample_by_filename(self, filename):
+        index = next(
+            i for i, path in enumerate(self.input_img_paths) if filename in path
+        )
+        sample = self.dataset.skip(index).take(1)
+        for image, mask in sample:
+            return image, mask
+
+    def get_sample_by_index(self, sample_index, batch_size):
+        # Calculate which batch the sample is in
+        batch_index = sample_index // batch_size
+        # Calculate the index of the sample within its batch
+        index_within_batch = sample_index % batch_size
+
+        # Extract the batch
+        for image, mask in self.dataset.skip(batch_index).take(1):
+            image = image
+            mask = mask
+
+        return image, mask
+
+    def set_dataset_from_directory(
         self,
         batch_size,
         input_img_dir,
@@ -63,9 +86,10 @@ class Pipeline:
         input_img_paths = self.__sort_directory__(input_img_dir)
         target_img_paths = self.__sort_directory__(target_img_dir)
 
-        # Save paths in object
+        # Save details to object
         self.input_img_paths = input_img_paths
         self.target_img_paths = target_img_paths
+        self.batch_size = batch_size
 
         # For faster debugging, limits the size of data
         if max_dataset_len:
@@ -79,7 +103,7 @@ class Pipeline:
             self.__decode_dataset__, num_parallel_calls=tf_data.AUTOTUNE
         )
 
-        return dataset.batch(batch_size)
+        self.dataset = dataset
 
     def __sort_directory__(self, input_dir):
         """
