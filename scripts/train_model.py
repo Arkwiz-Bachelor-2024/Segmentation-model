@@ -79,7 +79,8 @@ model.compile(
 )
 
 # Callback for saving weights
-CHECKPOINT_FILEPATH = "./ckpt/checkpoint.model.keras"
+#TODO add model name to enviroment upon calling job
+CHECKPOINT_FILEPATH = f"./models/{os.environ.get("MODEL_NAME")}"
 model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=CHECKPOINT_FILEPATH,
     mode="max",
