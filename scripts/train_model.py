@@ -1,39 +1,34 @@
 # from cv2 import applyColorMap
-import numpy as np
-from tensorflow import keras
-import keras
 import os
 import sys
-from natsort import natsorted
-
-
 # Imports the root directory to the path in order to import project modules
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
-# Directory scripts
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from natsort import natsorted
+
 import modules.model_architectures as model_architectures
 from modules.pipeline import Pipeline
 
 """
-This script serves as an application for utilizing images and masks to create a semantic segmentation model based upon given specifications. 
+This script an initiator to train a segmentation model based upon the specified parameters in the script.
 
 """
-
 # Check available GPUs
 gpus = tf.config.list_physical_devices("GPU")
 print("GPUs Available: ", gpus)
 
 # * Hyperparameters
-
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
 BATCH_SIZE = 32
 EPOCHS = 10
-BATCH_SIZE = 8
-EPOCHS = 2
 
 # * Datasets
+MAX_NUMBER_SAMPLES = 20
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -43,7 +38,7 @@ training_pipeline.set_dataset_from_directory(
     training_img_dir=training_img_dir,
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
-    max_dataset_len=MAX_NUMBER_SAMPLES,
+    # max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 training_dataset = training_pipeline.dataset
 
@@ -70,36 +65,29 @@ test_dataset = test_pipeline.dataset
 
 # Creates the model itself
 model = model_architectures.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
-
 model.compile(
     optimizer=keras.optimizers.Adam(1e-4),
     loss="sparse_categorical_crossentropy",
 )
 
-# Callback for saving weights
-CHECKPOINT_FILEPATH = "./models/model.keras"
-#TODO add model name to enviroment upon calling job
-CHECKPOINT_FILEPATH = f"./models/{os.environ.get("MODEL_NAME")}"
+# Callback for saving model
+CHECKPOINT_FILEPATH = f"./models/{os.environ.get("SLURM_JOB_NAME")}"
 model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=CHECKPOINT_FILEPATH,
-    mode="max",
+    mode="auto",
     verbose=1,
     save_best_only=True,
 )
 
 print("---------------------------------------------------------------------------------------------------")
-
 print("Data shape")
-
 # Shapes of the data
 for x, y in training_dataset.take(1):
     print(f"Image shape: {x.shape}")
     print(f"Mask shape: {y.shape}")
-
 print("---------------------------------------------------------------------------------------------------")
 
-
-# Fit the model
+# Train
 model.fit(
     training_dataset,
     epochs=EPOCHS,
@@ -108,10 +96,32 @@ model.fit(
     verbose=2,
 )
 
-predictions = model.predict(test_dataset)
+# predictions = model.predict(test_dataset)
+# mask = np.argmax(predictions[1], axis=-1)
 
-print(predictions)
+# Initialize the MeanIoU metric
+miou_metric = keras.metrics.MeanIOU(num_classes=NUM_CLASSES)
 
-mask = np.argmax(predictions[1], axis=-1)
+# Iterate over the test dataset
+for images, true_masks in test_dataset:
+    # Predict segmentation masks
+    pred_masks_probs = model.predict(images)
+    crf_mask = conditional_random_field(
+        image=images.numpy(), pred_mask_probs=pred_mask_probs, inference_iterations=1
+    )
 
-# TODO Predict whole test set on mIOU metric and make a custom output
+    # Convert predictions from probabilities to class indices if necessary
+    pred_masks = tf.argmax(pred_masks_probs, axis=-1)
+    
+    # Ensure true_masks and pred_masks are compatible with MeanIoU requirements
+    # This might require casting the dtype and reshaping if necessary
+    pred_masks = tf.cast(pred_masks, dtype=tf.int32)
+    true_masks = tf.cast(true_masks, dtype=tf.int32)
+    
+    # Update the MeanIoU metric
+    miou_metric.update_state(true_masks, pred_masks)
+
+# Retrieve the final mean IoU value
+mean_iou = miou_metric.result().numpy()
+
+print(f"Mean IoU over the test set: {mean_iou}")
