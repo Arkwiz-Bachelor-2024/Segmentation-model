@@ -26,6 +26,7 @@ def pre_defined_conditional_random_field(image, pred_mask_probs, inference_itera
     gaussian_potential = create_pairwise_gaussian(sdims=(3, 3), shape=image.shape[:2])
 
     # Pairwise Bilateral potentials for encouraging nearby pixels with similar color and intensity to get similar labels.
+    # Favours establishing edges
     # ? schan - The influence of color differences when labeling.
     bilateral_potential = create_pairwise_bilateral(
         sdims=(8, 8), schan=(13, 13, 13), img=image, chdim=2
@@ -33,7 +34,7 @@ def pre_defined_conditional_random_field(image, pred_mask_probs, inference_itera
 
     # ? Compat - The potentials influence on the final labeling. The strength of the potential.
     d.addPairwiseEnergy(gaussian_potential, compat=3)
-    d.addPairwiseEnergy(bilateral_potential, compat=10)
+    d.addPairwiseEnergy(bilateral_potential, compat=5)
 
     # Perform inference to get the refined segmentation.
     Q = d.inference(inference_iterations)
