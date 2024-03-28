@@ -98,9 +98,7 @@ model.fit(
 )
 
 predictions = model.predict(training_dataset)
-
 print(predictions)
-
 mask = np.argmax(predictions[1], axis=-1)
 
 # TODO Predict whole test set on mIOU metric and make a custom output
