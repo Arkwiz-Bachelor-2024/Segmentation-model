@@ -11,6 +11,7 @@ from tensorflow import keras
 from natsort import natsorted
 
 import modules.model_architectures as model_architectures
+from modules.crf import conditional_random_field
 from modules.pipeline import Pipeline
 
 """
@@ -24,7 +25,7 @@ print("GPUs Available: ", gpus)
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 EPOCHS = 10
 
 # * Datasets
@@ -35,7 +36,7 @@ training_pipeline = Pipeline()
 training_img_dir = "data/img/train"
 training_mask_dir = "data/masks/train"
 training_pipeline.set_dataset_from_directory(
-    training_img_dir=training_img_dir,
+    input_img_dir=training_img_dir,
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
     # max_dataset_len=MAX_NUMBER_SAMPLES,
@@ -56,7 +57,7 @@ validation_dataset = validation_pipeline.dataset
 test_img_dir = "data/img/test"
 test_mask_dir = "data/masks/test"
 test_pipeline = Pipeline()
-test_pipeline.get_dataset_from_directory(
+test_pipeline.set_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=test_img_dir,
     target_img_dir=test_mask_dir,
@@ -71,7 +72,7 @@ model.compile(
 )
 
 # Callback for saving model
-CHECKPOINT_FILEPATH = f"./models/{os.environ.get("SLURM_JOB_NAME")}"
+CHECKPOINT_FILEPATH = f"./models/{os.environ.get('SLURM_JOB_NAME')}"
 model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=CHECKPOINT_FILEPATH,
     mode="auto",
@@ -85,6 +86,8 @@ print("Data shape")
 for x, y in training_dataset.take(1):
     print(f"Image shape: {x.shape}")
     print(f"Mask shape: {y.shape}")
+
+print("Training dataset: ", training_dataset)
 print("---------------------------------------------------------------------------------------------------")
 
 # Train
@@ -100,14 +103,14 @@ model.fit(
 # mask = np.argmax(predictions[1], axis=-1)
 
 # Initialize the MeanIoU metric
-miou_metric = keras.metrics.MeanIOU(num_classes=NUM_CLASSES)
+miou_metric = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
 
 # Iterate over the test dataset
 for images, true_masks in test_dataset:
     # Predict segmentation masks
     pred_masks_probs = model.predict(images)
     crf_mask = conditional_random_field(
-        image=images.numpy(), pred_mask_probs=pred_mask_probs, inference_iterations=1
+        image=images.numpy(), pred_mask_probs=pred_masks_probs, inference_iterations=5
     )
 
     # Convert predictions from probabilities to class indices if necessary

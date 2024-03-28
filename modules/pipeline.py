@@ -23,33 +23,6 @@ class Pipeline:
         self.dataset = None
         self.batch_size = None
 
-    def get_dataset_from_paths(
-        self,
-        batch_size,
-        input_img_paths,
-        target_img_paths,
-        max_dataset_len=None,
-    ):
-        """
-        Returns an array sequentially containing the datset batch of given batch size based upon given paths along with
-        the path of the input and target images.
-
-        """
-
-        # For faster debugging, limits the size of data
-        if max_dataset_len:
-            input_img_paths = input_img_paths[:max_dataset_len]
-            target_img_paths = target_img_paths[:max_dataset_len]
-
-        dataset = tf_data.Dataset.from_tensor_slices(
-            (input_img_paths, target_img_paths)
-        )
-        dataset = dataset.map(
-            self.__decode_dataset__, num_parallel_calls=tf_data.AUTOTUNE
-        )
-
-        return dataset.batch(batch_size)
-
     def get_sample_by_filename(self, filename):
         index = next(
             i for i, path in enumerate(self.input_img_paths) if filename in path
@@ -103,7 +76,7 @@ class Pipeline:
             self.__decode_dataset__, num_parallel_calls=tf_data.AUTOTUNE
         )
 
-        self.dataset = dataset
+        self.dataset = dataset.batch(batch_size)
 
     def __sort_directory__(self, input_dir):
         """

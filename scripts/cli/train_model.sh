@@ -1,6 +1,6 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
-#SBATCH --job-name=model_training_4
+#SBATCH --job-name=seg_model_10e_64b+DA
 
 #SBATCH --time=0-03:00:00         # format: D-HH:MM:SS
 #SBATCH --partition=GPUQ          # Asking for a GPU
@@ -37,20 +37,19 @@ echo "---------------------------------------------------------"
 echo "The job was run on these nodes: $SLURM_JOB_NODELIST"
 echo "Number of nodes: $SLURM_JOB_NUM_NODES"
 echo "---------------------------------------------------------"
-
-#* Modules
-
+echo "Assert Enviroment modules are loaded..."
 module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
-
+echo "---------------------------------------------------------"
+echo "Assert python modules are loaded...."
+pip install cython --user
+pip install git+https://github.com/lucasb-eyer/pydensecrf.git --user
 echo "---------------------------------------------------------"
 echo "GPU specifications:"
 nvidia-smi
 echo "---------------------------------------------------------"
-
-echo "Running script.."
-
+echo "Running script..."
 echo "---------------------------------------------------------"
-python train_model.py
+python ./scripts/train_model.py
 echo "---------------------------------------------------------"
 
 echo "Script completed"

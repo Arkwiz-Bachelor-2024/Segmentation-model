@@ -6,32 +6,6 @@ from pydensecrf.utils import (
     create_pairwise_gaussian,
 )
 
-# Heuristic approach
-
-# Parameters
-# sdim - Dimensions of filter
-# schan - Impact of each channel(colors)
-# compat - Weight attributed to each potential in the context of labeling
-# Inference - Iterations of labeling based on potentials
-
-#TODO sort dataset by uniform class distribution
-# Binary grid search
-# Dataset 
-# 10 pictures with most uniform class distribution from test set predicted
-
-# sdim, schan, compat
-# 5 inference iterations as an estimate to show the impact of crf, might try 3
-# 3 models for each parameter with average and upper and lower
-# Upon reaching a new best model, take the average between bounds and run again
-
-
-# Assumptions for starting point of potentials
-# Rough estimate of smallest objects to identify meaning the dimensons of the potential impact
-# has to be able to take into account objects of this size
-# - Road width around 2 - 4 meters : 4 to 8 pixels
-# - Tree width from 2 - 10 meters : 4 to 20 pixels
-
-
 def conditional_random_field(image, pred_mask_probs, inference_iterations):
 
     # Assuming `image` is your input image in [0, 255] and `pred_mask_logits` are the logits
@@ -54,12 +28,12 @@ def conditional_random_field(image, pred_mask_probs, inference_iterations):
     # Favours establishing edges
     # ? schan - The influence of color differences when labeling.
     bilateral_potential = create_pairwise_bilateral(
-        sdims=(80, 80), schan=(13, 13, 13), img=image, chdim=2
+        sdims=(8, 8), schan=(13, 13, 13), img=image, chdim=2
     )
 
     # ? Compat - The potentials influence on the final labeling. The strength of the potential.
     d.addPairwiseEnergy(gaussian_potential, compat=3)
-    d.addPairwiseEnergy(bilateral_potential, compat=10)
+    d.addPairwiseEnergy(bilateral_potential, compat=5)
 
     # Perform inference to get the refined segmentation.
     Q = d.inference(inference_iterations)
