@@ -1,0 +1,34 @@
+
+# Heuristic approach
+
+# Binary grid search
+# Pydensecrf outside of Scikit API meaning custom solution is needed
+# Its more fitted to image segmentation
+# Dataset
+# 10 pictures with most uniform class distribution
+
+# sdim, schan, compat
+# 5 inference iterations as an estimate to show the impact of crf, might try 3
+# 3 models for each parameter with average and upper and lower
+# Upon reaching a new best model, take the average between bounds and run again
+
+# Assumptions for starting point of potentials
+# Rough estimate of smallest objects to identify meaning the dimensons of the potential impact
+# has to be able to take into account objects of this size
+# - Road width around 2 - 4 meters : 4 to 8 pixels
+# - Tree width from 2 - 10 meters : 4 to 20 pixels
+
+# Parameters
+# sdim - The distance of pixels of influence in each axis
+# schan - Impact of each channel(colors)
+# compat - Weight attributed to each potential in the context of labeling
+# Inference - Iterations of labeling based on potentials
+
+# Parameter bounds
+# sdims = [(3, 3), (1, 1), (5, 5)]
+# schan = [(5, 5, 5), (10, 10, 10), (15, 15, 15)]
+# compats = [5, 10, 15]
+
+# # Excludes the shcan for colour differences
+# sdims_options = [(3, 3), (1, 1), (5, 5)]
+# compats_options = [(5, 10), (10, 10), (10, 5)]
