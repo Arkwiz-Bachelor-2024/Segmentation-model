@@ -27,7 +27,7 @@ print("GPUs Available: ", gpus)
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
 BATCH_SIZE = 64
-EPOCHS = 10
+EPOCHS = 30
 
 # * Datasets
 MAX_NUMBER_SAMPLES = 20
@@ -106,3 +106,5 @@ model.fit(
     validation_data=validation_dataset,
     verbose=2,
 )
+
+print("Training completed")
