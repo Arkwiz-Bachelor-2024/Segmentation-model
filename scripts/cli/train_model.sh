@@ -1,17 +1,16 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
-#SBATCH --job-name=seg_model_10e_64b+DA
+#SBATCH --job-name=30e_64b_LTV+DA
 
-#SBATCH --time=0-03:00:00         # format: D-HH:MM:SS
+#SBATCH --time=0-05:00:00         # format: D-HH:MM:SS
 #SBATCH --partition=GPUQ          # Asking for a GPU
-#SBATCH --gres=gpu:1              # Number of GPUS
+#SBATCH --gres=gpu:2              # Number of GPUS
 #SBATCH --constraint="gpu40g"     # Type of GPU
 #SBATCH --mem=40G                 # Asking for RAM
 #SBATCH --nodes=1
 
 #SBATCH --output=output.txt       # Specifying 'stdout'
 #SBATCH --error=errors.txt        # Specifying 'stderr'
-
 #SBATCH --mail-user=petteed@stud.ntnu.no
 #SBATCH --mail-type=ALL
 
@@ -41,17 +40,21 @@ echo "Assert Enviroment modules are loaded..."
 module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
 echo "---------------------------------------------------------"
 echo "Assert python modules are loaded...."
+pip install sklearn --user
+pip install matplotlib --user
 pip install cython --user
 pip install git+https://github.com/lucasb-eyer/pydensecrf.git --user
 echo "---------------------------------------------------------"
 echo "GPU specifications:"
 nvidia-smi
 echo "---------------------------------------------------------"
-echo "Running script..."
+echo "Training model:"
 echo "---------------------------------------------------------"
 python ./scripts/train_model.py
 echo "---------------------------------------------------------"
-
+echo "Evaluating model:"
+python ./scripts/evaluate_model.py
+echo "---------------------------------------------------------"
 echo "Script completed"
 
 # Resets the enviroment maintaining idempotency

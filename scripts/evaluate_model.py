@@ -15,7 +15,7 @@ from modules.crf import pre_defined_conditional_random_field
 from modules.plot import plot_confusion_matrix
 
 # * Components
-model = keras.models.load_model("./models/seg_model_10e_64b+DA")
+model = keras.models.load_model(f"./models/{os.environ.get('SLURM_JOB_NAME')}")
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
