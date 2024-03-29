@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def simple_image_display(titles, images, descriptions, color_map):
@@ -47,3 +48,46 @@ def simple_image_display(titles, images, descriptions, color_map):
 
     plt.tight_layout()
     plt.show()
+
+
+def plot_confusion_matrix(cm, class_names, save_path):
+    """
+    Plots a confusion matrix using Matplotlib's functionality.
+
+    Args:
+    - cm: The confusion matrix to plot.
+    - class_names: An array of labels for the classes.
+    """
+    fig, ax = plt.subplots(figsize=(10, 8))
+    im = ax.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
+    ax.figure.colorbar(im, ax=ax)
+
+    # Show all ticks and label them with the respective list entries
+    ax.set(
+        xticks=np.arange(cm.shape[1]),
+        yticks=np.arange(cm.shape[0]),
+        xticklabels=class_names,
+        yticklabels=class_names,
+        ylabel="Actual label",
+        xlabel="Predicted label",
+    )
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+
+    # Loop over data dimensions and create text annotations.
+    fmt = ".1f"  # Format for annotations inside the heatmap.
+    thresh = cm.max() / 2.0
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(
+                j,
+                i,
+                format(cm[i, j], fmt),
+                ha="center",
+                va="center",
+                color="white" if cm[i, j] > thresh else "black",
+            )
+    fig.tight_layout()
+    plt.title("Normalized Confusion Matrix")
+    plt.savefig(save_path, format="png", dpi=300, bbox_inches="tight")

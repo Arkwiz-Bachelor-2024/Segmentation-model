@@ -13,6 +13,7 @@ from natsort import natsorted
 import modules.model_architectures as model_architectures
 from modules.crf import conditional_random_field
 from modules.pipeline import Pipeline
+from modules.loss_functions import multi_class_tversky_loss
 
 """
 This script an initiator to train a segmentation model based upon the specified parameters in the script.
@@ -64,18 +65,21 @@ test_pipeline.set_dataset_from_directory(
 )
 test_dataset = test_pipeline.dataset
 
-# Creates the model itself
+# * Model
 model = model_architectures.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
-model.compile(
-    optimizer=keras.optimizers.Adam(1e-4),
-    loss="sparse_categorical_crossentropy",
-)
+
+# Loss function
+# In order of Background, Building, Woodland, Water, Road
+weights = [(1, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
+custom_loss_function = multi_class_tversky_loss(weights)
+
+model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
 
 # Callback for saving model
 CHECKPOINT_FILEPATH = f"./models/{os.environ.get('SLURM_JOB_NAME')}"
 model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=CHECKPOINT_FILEPATH,
-    mode="auto",
+    mode="min",
     verbose=1,
     save_best_only=True,
 )

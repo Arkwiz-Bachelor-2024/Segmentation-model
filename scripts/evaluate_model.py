@@ -9,12 +9,13 @@ import keras
 import numpy as np
 import tensorflow as tf
 
-from modules.metrics import get_class_distribution, get_mIOU, get_OA
+from sklearn.metrics import confusion_matrix
 from modules.pipeline import Pipeline
+from modules.crf import pre_defined_conditional_random_field
+from modules.plot import plot_confusion_matrix
 
 # * Components
-#TODO change
-model = keras.models.load_model("./models/model.keras")
+model = keras.models.load_model("./models/seg_model_10e_64b+DA")
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
@@ -23,33 +24,57 @@ pipeline.set_dataset_from_directory(
     # max_dataset_len=20,
 )
 test_dataset = pipeline.dataset
+pred_masks_probs = model.predict(test_dataset)
+raw_masks = np.argmax(pred_masks_probs, axis=-1)
 
-predictions = model.predict(test_dataset)
-raw_mask = np.argmax(predictions[1], axis=-1)
 
+NUM_CLASSES = 5
 # Initialize the MeanIoU metric
-miou_metric = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
+raw_miou_metric = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
+crf_miou_metric = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
 
-# Iterate over the test dataset
-for images, true_masks in test_dataset:
-    # Predict segmentation masks
-    pred_masks_probs = model.predict(images)
-    crf_mask = conditional_random_field(
-        image=images.numpy(), pred_mask_probs=pred_masks_probs, inference_iterations=5
+for prediction, (image, mask), pred_mask in zip(
+    pred_masks_probs, test_dataset, raw_masks
+):
+    crf_mask = pre_defined_conditional_random_field(
+        image=image.numpy().squeeze(),
+        pred_mask_probs=prediction,
+        inference_iterations=5,
     )
 
-    # Convert predictions from probabilities to class indices if necessary
-    pred_masks = tf.argmax(pred_masks_probs, axis=-1)
-    
-    # Ensure true_masks and pred_masks are compatible with MeanIoU requirements
-    # This might require casting the dtype and reshaping if necessary
-    pred_masks = tf.cast(pred_masks, dtype=tf.int32)
-    true_masks = tf.cast(true_masks, dtype=tf.int32)
-    
-    # Update the MeanIoU metric
-    miou_metric.update_state(true_masks, pred_masks)
+    # Update mIoU
+    raw_miou_metric.update_state(mask, pred_mask)
+    crf_miou_metric.update_state(mask, crf_mask)
 
-# Retrieve the final mean IoU value
-mean_iou = miou_metric.result().numpy()
+# Extract and flatten masks
+masks_only_dataset = test_dataset.map(lambda image, mask: tf.reshape(mask, [-1]))
+flattened_masks = []
+for flattened_mask in masks_only_dataset:
+    flattened_masks.append(flattened_mask.numpy())
+masks_flattened = np.concatenate(flattened_masks)
+raw_masks_flattened = raw_masks.flatten()
 
-print(f"Mean IoU over the test set: {mean_iou}")
+# Compute confusion matrix
+cm = confusion_matrix(raw_masks_flattened, masks_flattened, labels=range(NUM_CLASSES))
+
+# Normalize the confusion matrix by row
+with np.errstate(divide="ignore", invalid="ignore"):
+    cm_normalized = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
+    cm_normalized[~np.isfinite(cm_normalized)] = 0  # Handle divisions by zero or NaN
+cm_percentage = cm_normalized * 100  # Convert to percentages
+
+raw_IoU = raw_miou_metric.result().numpy()
+crf_IoU = crf_miou_metric.result().numpy()
+
+
+cm_classes = ["Background", "Building", "Woodland", "Water", "Road"]
+save_path = (
+    f"./docs/models/{os.environ.get('SLURM_JOB_NAME')}/plots/confusion_matrix.png"
+)
+plot_confusion_matrix(
+    cm_percentage,
+    cm_classes,
+    save_path=save_path,
+)
+print(f"Raw mIoU over the test set: {raw_IoU:.2}")
+print(f"Crf mIoU over the test set: {crf_IoU:.2}")

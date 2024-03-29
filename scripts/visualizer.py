@@ -24,7 +24,7 @@ from modules.crf import pre_defined_conditional_random_field
 from modules.plot import simple_image_display
 
 # * Components
-model = keras.models.load_model("./models/model.keras")
+model = keras.models.load_model("./models/seg_model_10e_64b+DA")
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
@@ -47,22 +47,26 @@ cmap = ListedColormap(colors)
 images = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
 # * Samples
 image_name = "N-33-130-A-d-4-4_249.jpg"
-image_number = 537
+image_number = 1215
 # samples = pipeline.get_sample_by_filename(image_name)
 samples = pipeline.get_sample_by_index(image_number, 1)
 image = samples[0]
 mask = samples[1]
 
 # Predictions
+print(image.shape)
 image_with_batch = np.expand_dims(image, axis=0)
-pred_mask_probs = model.predict(image_with_batch)
+pred_mask_probs = model.predict(image)
+image = image.numpy().squeeze()
 
 # * Masks
 mask = tf.squeeze(mask)
 mask = mask.numpy()
 pred_mask = np.argmax(pred_mask_probs.squeeze(), axis=-1)
 crf_mask = pre_defined_conditional_random_field(
-    image=image.numpy(), pred_mask_probs=pred_mask_probs, inference_iterations=3
+    image=image,
+    pred_mask_probs=pred_mask_probs,
+    inference_iterations=3,
 )
 
 print("----------------------------------------------------------------------")
