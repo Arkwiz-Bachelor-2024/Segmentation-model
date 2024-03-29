@@ -1,0 +1,95 @@
+We are running from this directory: /cluster/work/petteed/seg_model/Segmentation-model
+---------------------------------------------------------
+The name of the job is: seg_model_10e_64b+DA
+The job ID is 19042182
+---------------------------------------------------------
+The job was run on these nodes: idun-04-06
+Number of nodes: 1
+---------------------------------------------------------
+Assert Enviroment modules are loaded...
+---------------------------------------------------------
+Assert python modules are loaded....
+Requirement already satisfied: cython in /cluster/apps/eb/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/site-packages (0.29.28)
+Collecting git+https://github.com/lucasb-eyer/pydensecrf.git
+  Cloning https://github.com/lucasb-eyer/pydensecrf.git to /tmp/pip-req-build-sjs21wy5
+  Resolved https://github.com/lucasb-eyer/pydensecrf.git to commit 2723c7fa4f2ead16ae1ce3d8afe977724bb8f87f
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+---------------------------------------------------------
+GPU specifications:
+Thu Mar 28 12:46:04 2024       
++---------------------------------------------------------------------------------------+
+| NVIDIA-SMI 545.23.06              Driver Version: 545.23.06    CUDA Version: 12.3     |
+|-----------------------------------------+----------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |         Memory-Usage | GPU-Util  Compute M. |
+|                                         |                      |               MIG M. |
+|=========================================+======================+======================|
+|   0  NVIDIA A100-PCIE-40GB          On  | 00000000:48:00.0 Off |                    0 |
+| N/A   26C    P0              32W / 250W |      4MiB / 40960MiB |      0%      Default |
+|                                         |                      |             Disabled |
++-----------------------------------------+----------------------+----------------------+
+                                                                                         
++---------------------------------------------------------------------------------------+
+| Processes:                                                                            |
+|  GPU   GI   CI        PID   Type   Process name                            GPU Memory |
+|        ID   ID                                                             Usage      |
+|=======================================================================================|
+|  No running processes found                                                           |
++---------------------------------------------------------------------------------------+
+---------------------------------------------------------
+Running script...
+---------------------------------------------------------
+GPUs Available:  [PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
+---------------------------------------------------------------------------------------------------
+Data shape
+Image shape: (64, 512, 512, 3)
+Mask shape: (64, 512, 512, 1)
+Training dataset:  <BatchDataset element_spec=(TensorSpec(shape=(None, 512, 512, 3), dtype=tf.float32, name=None), TensorSpec(shape=(None, 512, 512, 1), dtype=tf.uint8, name=None))>
+---------------------------------------------------------------------------------------------------
+Epoch 1/10
+
+Epoch 1: val_loss improved from inf to 3.12041, saving model to ./models/seg_model_10e_64b+DA
+117/117 - 929s - loss: 2.1873 - val_loss: 3.1204 - 929s/epoch - 8s/step
+Epoch 2/10
+
+Epoch 2: val_loss did not improve from 3.12041
+117/117 - 337s - loss: 1.2516 - val_loss: 3.8967 - 337s/epoch - 3s/step
+Epoch 3/10
+
+Epoch 3: val_loss did not improve from 3.12041
+117/117 - 332s - loss: 1.0911 - val_loss: 3.6811 - 332s/epoch - 3s/step
+Epoch 4/10
+
+Epoch 4: val_loss did not improve from 3.12041
+117/117 - 339s - loss: 1.0056 - val_loss: 3.1508 - 339s/epoch - 3s/step
+Epoch 5/10
+
+Epoch 5: val_loss improved from 3.12041 to 1.97626, saving model to ./models/seg_model_10e_64b+DA
+117/117 - 352s - loss: 0.9458 - val_loss: 1.9763 - 352s/epoch - 3s/step
+Epoch 6/10
+
+Epoch 6: val_loss improved from 1.97626 to 0.98426, saving model to ./models/seg_model_10e_64b+DA
+117/117 - 378s - loss: 0.8994 - val_loss: 0.9843 - 378s/epoch - 3s/step
+Epoch 7/10
+
+Epoch 7: val_loss improved from 0.98426 to 0.84800, saving model to ./models/seg_model_10e_64b+DA
+117/117 - 379s - loss: 0.8837 - val_loss: 0.8480 - 379s/epoch - 3s/step
+Epoch 8/10
+
+Epoch 8: val_loss improved from 0.84800 to 0.84243, saving model to ./models/seg_model_10e_64b+DA
+117/117 - 348s - loss: 0.8669 - val_loss: 0.8424 - 348s/epoch - 3s/step
+Epoch 9/10
+
+Epoch 9: val_loss improved from 0.84243 to 0.79472, saving model to ./models/seg_model_10e_64b+DA
+117/117 - 381s - loss: 0.8420 - val_loss: 0.7947 - 381s/epoch - 3s/step
+Epoch 10/10
+
+Epoch 10: val_loss improved from 0.79472 to 0.77904, saving model to ./models/seg_model_10e_64b+DA
+117/117 - 379s - loss: 0.8292 - val_loss: 0.7790 - 379s/epoch - 3s/step
+---------------------------------------------------------
+Script completed
