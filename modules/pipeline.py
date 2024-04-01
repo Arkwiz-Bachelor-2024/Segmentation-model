@@ -141,7 +141,6 @@ class Pipeline:
         
         # One-hot encode the mask
         target_img_one_hot = tf.one_hot(target_img, depth=num_classes)
-        target_img_one_hot = tf.squeeze(target_img_one_hot, axis=3)  # Remove the last redundant dimension
 
         # Data augmentation which will be applied differently each epoch giving different versions of the images each time.
         input_img, target_img_one_hot = self.__augment_image__(input_img, target_img_one_hot)
