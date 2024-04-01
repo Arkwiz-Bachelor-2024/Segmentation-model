@@ -40,7 +40,7 @@ echo "Assert Enviroment modules are loaded..."
 module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
 echo "---------------------------------------------------------"
 echo "Assert python modules are loaded...."
-pip install sklearn --user
+pip install scikit-learn --user
 pip install matplotlib --user
 pip install cython --user
 pip install git+https://github.com/lucasb-eyer/pydensecrf.git --user
@@ -52,8 +52,8 @@ echo "Training model:"
 echo "---------------------------------------------------------"
 python ./scripts/train_model.py
 echo "---------------------------------------------------------"
-echo "Evaluating model:"
-python ./scripts/evaluate_model.py
+# echo "Evaluating model:"
+# python ./scripts/evaluate_model.py
 echo "---------------------------------------------------------"
 echo "Script completed"
 

@@ -73,7 +73,7 @@ class Pipeline:
             (input_img_paths, target_img_paths)
         )
         dataset = dataset.map(
-            self.__decode_dataset__, num_parallel_calls=tf_data.AUTOTUNE
+            self.__decode_dataset_multi_loss__, num_parallel_calls=tf_data.AUTOTUNE
         )
 
         self.dataset = dataset.batch(batch_size)
@@ -114,6 +114,39 @@ class Pipeline:
         input_img, target_img = self.__augment_image__(input_img, target_img)
 
         return input_img, target_img
+
+    def __decode_dataset_multi_loss__(self, input_img_path, target_img_path):
+        """
+        Rescales,resizes and decodes an image and its respective mask to a tensor.
+
+        """
+        # Converts the input image to a tensor
+        input_img = tf_io.read_file(input_img_path)
+        input_img = tf_io.decode_jpeg(input_img, channels=3)
+        input_img = tf_image.resize(input_img, (512, 512))
+        input_img = tf.cast(input_img, tf.float32) / 255.0
+        # Dtype describes how the bytes of the image are to be interpeted, e.g the format of the image.
+        input_img = tf_image.convert_image_dtype(input_img, "float32")
+
+        # Converts the respective target image(mask) to a tensor
+        target_img = tf_io.read_file(target_img_path)
+        target_img = tf_io.decode_png(target_img, channels=1)
+        target_img = tf.cast(target_img, tf.float32) / 255.0
+        target_img = tf_image.resize(target_img, (512, 512), method="nearest")
+        target_img = tf_image.convert_image_dtype(target_img, "uint8")
+
+        num_classes = 5
+        # Assuming your mask labels are in 0 to num_classes-1 range after resizing
+        target_img = tf.cast(target_img * (num_classes - 1), tf.int32)  # Scale and cast to integer
+        
+        # One-hot encode the mask
+        target_img_one_hot = tf.one_hot(target_img, depth=num_classes)
+        target_img_one_hot = tf.squeeze(target_img_one_hot, axis=3)  # Remove the last redundant dimension
+
+        # Data augmentation which will be applied differently each epoch giving different versions of the images each time.
+        input_img, target_img_one_hot = self.__augment_image__(input_img, target_img_one_hot)
+
+        return input_img, target_img_one_hot
 
     def __augment_image__(self, input_img, target_img):
         """

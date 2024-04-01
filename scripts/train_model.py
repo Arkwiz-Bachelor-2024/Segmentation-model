@@ -11,7 +11,6 @@ from tensorflow import keras
 from natsort import natsorted
 
 import modules.model_architectures as model_architectures
-from modules.crf import conditional_random_field
 from modules.pipeline import Pipeline
 from modules.loss_functions import multi_class_tversky_loss
 
@@ -70,7 +69,8 @@ model = model_architectures.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CL
 
 # Loss function
 # In order of Background, Building, Woodland, Water, Road
-weights = [(1, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
+# (FP, FN)
+weights = [(1.5, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
 custom_loss_function = multi_class_tversky_loss(weights)
 
 model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
