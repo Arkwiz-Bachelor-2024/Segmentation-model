@@ -28,8 +28,8 @@ model = keras.models.load_model("./models/seg_model_10e_64b+DA")
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
-    input_img_dir="data/img/test",
-    target_img_dir="data/masks/test",
+    input_img_dir="data/img/train",
+    target_img_dir="data/masks/train",
     # max_dataset_len=20,
 )
 dataset = pipeline.dataset
