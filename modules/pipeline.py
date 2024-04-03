@@ -44,13 +44,13 @@ class Pipeline:
 
         return image, mask
 
-    # TODO refactor for multi loss
     def set_dataset_from_directory(
         self,
         batch_size,
         input_img_dir,
         target_img_dir,
         max_dataset_len=None,
+        per_class_masks=False,
     ):
         """
         Returns a datset batch of given batch size extracted from a specified directory.
@@ -73,9 +73,14 @@ class Pipeline:
         dataset = tf_data.Dataset.from_tensor_slices(
             (input_img_paths, target_img_paths)
         )
-        dataset = dataset.map(
-            self.__decode_dataset_multi_loss__, num_parallel_calls=tf_data.AUTOTUNE
-        )
+        if per_class_masks:
+            dataset = dataset.map(
+                self.__decode_dataset_multi_loss__, num_parallel_calls=tf_data.AUTOTUNE
+            )
+        else:
+            dataset = dataset.map(
+                self.__decode_dataset__, num_parallel_calls=tf_data.AUTOTUNE
+            )
 
         self.dataset = dataset.batch(batch_size)
 

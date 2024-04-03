@@ -23,7 +23,7 @@ with tf.keras.utils.custom_object_scope({"loss": custom_loss_function}):
 # model = keras.models.load_model(f"./models/{os.environ.get('SLURM_JOB_NAME')}")
 # model = keras.models.load_model(f"./models/30e_64b_LTV+DA(1)")
 pipeline = Pipeline()
-pipeline.set_dataset_from_directory(
+pipeline.set_dataset_from_directory_multi(
     batch_size=1,
     input_img_dir="data/img/val",
     target_img_dir="data/masks/val",

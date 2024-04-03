@@ -28,6 +28,7 @@ print(
 print("Enviroment:")
 
 print("TensorFlow version:", tf.__version__)
+print("Keras version:", keras.version())
 
 # Check available GPUs
 gpus = tf.config.list_physical_devices("GPU")
@@ -50,7 +51,7 @@ MAX_NUMBER_SAMPLES = 50
 training_pipeline = Pipeline()
 training_img_dir = "data/img/train"
 training_mask_dir = "data/masks/train"
-training_pipeline.set_dataset_from_directory(
+training_pipeline.set_dataset_from_directory_multi(
     input_img_dir=training_img_dir,
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
@@ -62,7 +63,7 @@ training_dataset = training_pipeline.dataset
 validation_img_dir = "data/img/val"
 validation_mask_dir = "data/masks/val"
 validation_pipeline = Pipeline()
-validation_pipeline.set_dataset_from_directory(
+validation_pipeline.set_dataset_from_directory_multi(
     batch_size=BATCH_SIZE,
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
@@ -74,14 +75,14 @@ validation_dataset = validation_pipeline.dataset
 # * Model
 model = model_architectures.get_ResNet_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
-# In order of Background, Building, Woodland, Water, Road
-# (FP, FN)
-weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
-custom_loss_function = multi_class_tversky_loss(weights)
+# # In order of Background, Building, Woodland, Water, Road
+# # (FP, FN)
+# weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
+# custom_loss_function = multi_class_tversky_loss(weights)
 
 model.compile(
     optimizer=keras.optimizers.Adam(1e-4),
-    loss=custom_loss_function,
+    loss="spare",
 )
 
 # Callbacks
@@ -130,7 +131,21 @@ print("Training dataset: ", training_dataset)
 print(
     "---------------------------------------------------------------------------------------------------"
 )
+# * Logging
+print(
+    "---------------------------------------------------------------------------------------------------"
+)
+print("Details:")
 
+print("Classes: ", NUM_CLASSES)
+print("Batch size:", BATCH_SIZE)
+print("Epochs", EPOCHS)
+print("Training samples : ", training_dataset.__sizeof__)
+print("Validation samples : ", validation_dataset.__sizeof__)
+
+print(
+    "---------------------------------------------------------------------------------------------------"
+)
 model.fit(
     training_dataset,
     epochs=EPOCHS,
