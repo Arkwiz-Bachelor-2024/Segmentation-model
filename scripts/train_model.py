@@ -30,7 +30,7 @@ BATCH_SIZE = 32
 EPOCHS = 3
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 64
+MAX_NUMBER_SAMPLES = 300
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -95,29 +95,12 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     save_best_only=True,
 )
 
-# tensorboard = keras.callbacks.TensorBoard(
-#     log_dir=f"./docs/logs/{os.environ.get('SLURM_JOB_NAME')}",
-#     write_steps_per_second=True,
-#     update_freq="batch",
-# )
+tensorboard = keras.callbacks.TensorBoard(
+    log_dir=f"./docs/logs/{os.environ.get('SLURM_JOB_NAME')}",
+    write_steps_per_second=True,
+    update_freq="batch",
+)
 
-# log_dir = 'logs/batch_level/' + datetime.now().strftime("%Y%m%d-%H%M%S") + '/train'
-# train_writer = tf.summary.create_file_writer(log_dir)
-
-class BatchLossCallback(tf.keras.callbacks.Callback):
-    def __init__(self, log_dir="./logs"):
-        super(BatchLossCallback, self).__init__()
-        self.log_dir = log_dir
-        self.writer = tf.summary.create_file_writer(self.log_dir)
-
-    def on_batch_end(self, batch, logs=None):
-        with self.writer.as_default():
-            for name, value in logs.items():
-                tf.summary.scalar(name, value, step=batch)
-            self.writer.flush()
-
-# Use the custom callback during training
-batch_loss_callback = BatchLossCallback(log_dir=f"./logs/{os.environ.get('SLURM_JOB_NAME', 'default')}/{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}")
 
 print(
     "---------------------------------------------------------------------------------------------------"
@@ -136,7 +119,7 @@ print(
 model.fit(
     training_dataset,
     epochs=EPOCHS,
-    callbacks=[model_checkpoint_callback,batch_loss_callback, early_stopping],
+    callbacks=[model_checkpoint_callback,tensorboard, early_stopping],
     validation_data=validation_dataset,
     verbose=2,
 )
