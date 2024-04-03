@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 
 # Imports the root directory to the path in order to import project modules
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -29,7 +30,7 @@ BATCH_SIZE = 2
 EPOCHS = 2
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 4
+MAX_NUMBER_SAMPLES = 20
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -39,7 +40,7 @@ training_pipeline.set_dataset_from_directory(
     input_img_dir=training_img_dir,
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
-    # max_dataset_len=MAX_NUMBER_SAMPLES,
+    max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 training_dataset = training_pipeline.dataset
 
@@ -53,35 +54,50 @@ validation_pipeline.set_dataset_from_directory(
     target_img_dir=validation_mask_dir,
 )
 validation_dataset = validation_pipeline.dataset
-# Test set
-test_img_dir = "data/img/test"
-test_mask_dir = "data/masks/test"
-test_pipeline = Pipeline()
-test_pipeline.set_dataset_from_directory(
-    batch_size=BATCH_SIZE,
-    input_img_dir=test_img_dir,
-    target_img_dir=test_mask_dir,
-)
-test_dataset = test_pipeline.dataset
+# # Test set
+# test_img_dir = "data/img/test"
+# test_mask_dir = "data/masks/test"
+# test_pipeline = Pipeline()
+# test_pipeline.set_dataset_from_directory(
+#     batch_size=BATCH_SIZE,
+#     input_img_dir=test_img_dir,
+#     target_img_dir=test_mask_dir,
+# )
+# test_dataset = test_pipeline.dataset
 
 # * Model
 model = model_architectures.get_ResNet_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
-# Loss function
+# Loss
 # In order of Background, Building, Woodland, Water, Road
 # (FP, FN)
-weights = [(1, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
+weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
 custom_loss_function = multi_class_tversky_loss(weights)
-
 model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
 
-# Callback for saving model
+# Callbacks
+early_stopping = keras.callbacks.EarlyStopping(
+    monitor="val_loss",
+    min_delta=0,
+    patience=2,
+    verbose=1,
+    mode="auto",
+    baseline=None,
+    restore_best_weights=False,
+    start_from_epoch=0,
+)
+
 CHECKPOINT_FILEPATH = f"./models/{os.environ.get('SLURM_JOB_NAME')}"
 model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=CHECKPOINT_FILEPATH,
     mode="min",
     verbose=1,
     save_best_only=True,
+)
+
+tensorboard = keras.callbacks.TensorBoard(
+    log_dir=f"./docs/logs/{datetime.now().strftime("%Y%m%d-%H%M%S")}",
+    update_freq="batch",
 )
 
 print(
@@ -98,11 +114,10 @@ print(
     "---------------------------------------------------------------------------------------------------"
 )
 
-# Train
 model.fit(
     training_dataset,
     epochs=EPOCHS,
-    callbacks=model_checkpoint_callback,
+    callbacks=[model_checkpoint_callback, tensorboard, early_stopping],
     validation_data=validation_dataset,
     verbose=2,
 )

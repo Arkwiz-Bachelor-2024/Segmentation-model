@@ -44,6 +44,7 @@ class Pipeline:
 
         return image, mask
 
+    #TODO refactor for multi loss
     def set_dataset_from_directory(
         self,
         batch_size,
@@ -143,6 +144,10 @@ class Pipeline:
 
         # One-hot encode the mask
         target_img_one_hot = tf.one_hot(target_img, depth=num_classes)
+<<<<<<< HEAD
+=======
+        # Remove old dimension
+>>>>>>> c6d416a236fcdefe39bfe9add19425e743a4dc79
         target_img_one_hot = tf.squeeze(target_img_one_hot, axis=-2)
 
         # Data augmentation which will be applied differently each epoch giving different versions of the images each time.
