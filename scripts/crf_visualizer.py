@@ -18,7 +18,7 @@ from modules.plot import simple_image_display
 # * Components
 model = keras.models.load_model("./models/model.keras")
 pipeline = Pipeline()
-pipeline.set_dataset_from_directory(
+pipeline.set_dataset_from_directory_multi(
     batch_size=1,
     input_img_dir="data/img/test",
     target_img_dir="data/masks/test",
