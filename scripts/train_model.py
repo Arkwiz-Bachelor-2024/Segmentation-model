@@ -25,11 +25,11 @@ print("GPUs Available: ", gpus)
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 64
-EPOCHS = 30
+BATCH_SIZE = 2
+EPOCHS = 2
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 20
+MAX_NUMBER_SAMPLES = 4
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -65,12 +65,12 @@ test_pipeline.set_dataset_from_directory(
 test_dataset = test_pipeline.dataset
 
 # * Model
-model = model_architectures.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
+model = model_architectures.get_ResNet_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
 # Loss function
 # In order of Background, Building, Woodland, Water, Road
 # (FP, FN)
-weights = [(1.5, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
+weights = [(1, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
 custom_loss_function = multi_class_tversky_loss(weights)
 
 model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)

@@ -6,6 +6,7 @@ Module which offers ways to visualize the datset and the predictions made by the
 import sys
 import os
 
+
 # Imports the root directory to the path in order to import project modules
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
@@ -22,14 +23,21 @@ from matplotlib.colors import ListedColormap
 from modules.pipeline import Pipeline
 from modules.crf import pre_defined_conditional_random_field
 from modules.plot import simple_image_display
+from modules.loss_functions import multi_class_tversky_loss
 
 # * Components
-model = keras.models.load_model("./models/seg_model_10e_64b+DA")
+
+weights = [(1.5, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
+custom_loss_function = multi_class_tversky_loss(weights)
+with tf.keras.utils.custom_object_scope({"loss": custom_loss_function}):
+    model = tf.keras.models.load_model(f"./models/30e_64b_LTV+DA(1)")
+# model = keras.models.load_model("./models/seg_model_10e_64b+DA")
+
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
-    input_img_dir="data/img/test",
-    target_img_dir="data/masks/test",
+    input_img_dir="data/img/train",
+    target_img_dir="data/masks/train",
     # max_dataset_len=20,
 )
 dataset = pipeline.dataset
@@ -47,7 +55,7 @@ cmap = ListedColormap(colors)
 images = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
 # * Samples
 image_name = "N-33-130-A-d-4-4_249.jpg"
-image_number = 1215
+image_number = 1015
 # samples = pipeline.get_sample_by_filename(image_name)
 samples = pipeline.get_sample_by_index(image_number, 1)
 image = samples[0]

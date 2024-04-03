@@ -137,13 +137,18 @@ class Pipeline:
 
         num_classes = 5
         # Assuming your mask labels are in 0 to num_classes-1 range after resizing
-        target_img = tf.cast(target_img * (num_classes - 1), tf.int32)  # Scale and cast to integer
-        
+        target_img = tf.cast(
+            target_img * (num_classes - 1), tf.int32
+        )  # Scale and cast to integer
+
         # One-hot encode the mask
         target_img_one_hot = tf.one_hot(target_img, depth=num_classes)
+        target_img_one_hot = tf.squeeze(target_img_one_hot, axis=-2)
 
         # Data augmentation which will be applied differently each epoch giving different versions of the images each time.
-        input_img, target_img_one_hot = self.__augment_image__(input_img, target_img_one_hot)
+        input_img, target_img_one_hot = self.__augment_image__(
+            input_img, target_img_one_hot
+        )
 
         return input_img, target_img_one_hot
 

@@ -8,13 +8,15 @@ Module containing custom loss functions used with Keras API.
 # Smooth is added to avoid dividing by 0
 def __tversky_index__(y_true, y_pred, alpha, beta, smooth=1e-6):
     # Cast mask to float for operations
-    y_true = K.cast(y_true, 'float32')
-    
+    y_true = K.cast(y_true, "float32")
+
     true_positives = K.sum(y_true * y_pred)
     false_positives = K.sum((1 - y_true) * y_pred)
     false_negatives = K.sum(y_true * (1 - y_pred))
-    return (true_positives + smooth) / (
-        true_positives + alpha * false_positives + beta * false_negatives + smooth
+    return (
+        2
+        * (true_positives + smooth)
+        / (true_positives + alpha * false_positives + beta * false_negatives + smooth)
     )
 
 
