@@ -1,11 +1,12 @@
 from tensorflow import keras
 from tensorflow.keras import layers
+import keras
 import numpy as np
 
 """
 Method which returns a U-Net model 
 
-Code extracted from:
+Code inspired by:
 https://keras.io/examples/vision/oxford_pets_image_segmentation/
 """
 
@@ -60,6 +61,50 @@ def get_UNET_model(img_size, num_classes):
         residual = layers.Conv2D(filters, 1, padding="same")(residual)
         x = layers.add([x, residual])  # Add back residual
         previous_block_activation = x  # Set aside next residual
+
+    # Add a per-pixel classification layer
+    outputs = layers.Conv2D(num_classes, 3, activation="softmax", padding="same")(x)
+
+    # Define the model
+    model = keras.Model(inputs, outputs)
+
+    return model
+
+
+def get_ResNet_model(img_size, num_classes):
+    inputs = keras.Input(shape=img_size + (3,))
+
+    encoder = keras.applications.ResNet101(
+        include_top=False, weights="imagenet", input_tensor=inputs
+    )
+
+    for layer in encoder.layers:
+        layer.trainable = False
+
+    x = encoder.output
+
+    # Dropout
+    x = layers.Dropout(0.3)(x)
+
+    # Decoder/Upsampling
+    for filters in [256, 128, 64, 32]:
+        x = layers.Activation("relu")(x)
+        x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+
+        x = layers.Activation("relu")(x)
+        x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+
+        x = layers.UpSampling2D(2)(x)
+
+    # Additional upsampling step to match the target dimension of 512x512
+    x = layers.UpSampling2D(2)(x)
+    x = layers.Conv2DTranspose(32, 3, padding="same")(
+        x
+    )  # Additional convolution for smoothing
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
 
     # Add a per-pixel classification layer
     outputs = layers.Conv2D(num_classes, 3, activation="softmax", padding="same")(x)

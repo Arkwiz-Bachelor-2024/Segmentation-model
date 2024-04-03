@@ -1,10 +1,11 @@
 import os
 import sys
-import datetime
+from datetime import datetime
 
 # Imports the root directory to the path in order to import project modules
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
+import keras
 
 import numpy as np
 import tensorflow as tf
@@ -19,18 +20,31 @@ from modules.loss_functions import multi_class_tversky_loss
 This script an initiator to train a segmentation model based upon the specified parameters in the script.
 
 """
+
+# * Enviroment
+print(
+    "---------------------------------------------------------------------------------------------------"
+)
+print("Enviroment:")
+
+print("TensorFlow version:", tf.__version__)
+
 # Check available GPUs
 gpus = tf.config.list_physical_devices("GPU")
 print("GPUs Available: ", gpus)
 
+print(
+    "---------------------------------------------------------------------------------------------------"
+)
+
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 32
-EPOCHS = 3
+BATCH_SIZE = 8
+EPOCHS = 4
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 300
+MAX_NUMBER_SAMPLES = 50
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -52,28 +66,23 @@ validation_pipeline.set_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
+    max_dataset_len=MAX_NUMBER_SAMPLES
 )
 validation_dataset = validation_pipeline.dataset
-# Test set
-test_img_dir = "data/img/test"
-test_mask_dir = "data/masks/test"
-test_pipeline = Pipeline()
-test_pipeline.set_dataset_from_directory(
-    batch_size=BATCH_SIZE,
-    input_img_dir=test_img_dir,
-    target_img_dir=test_mask_dir,
-)
-test_dataset = test_pipeline.dataset
+
 
 # * Model
-model = model_architectures.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
+model = model_architectures.get_ResNet_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
-# Loss
 # In order of Background, Building, Woodland, Water, Road
 # (FP, FN)
-weights = [(1, 1), (1,1), (1, 1), (1,1), (1, 1)]
+weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
 custom_loss_function = multi_class_tversky_loss(weights)
-model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
+
+model.compile(
+    optimizer=keras.optimizers.Adam(1e-4),
+    loss=custom_loss_function,
+)
 
 # Callbacks
 early_stopping = keras.callbacks.EarlyStopping(
@@ -82,9 +91,6 @@ early_stopping = keras.callbacks.EarlyStopping(
     patience=2,
     verbose=1,
     mode="auto",
-    baseline=None,
-    restore_best_weights=False,
-    start_from_epoch=0,
 )
 
 CHECKPOINT_FILEPATH = f"./models/{os.environ.get('SLURM_JOB_NAME')}"
@@ -96,11 +102,20 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
 )
 
 tensorboard = keras.callbacks.TensorBoard(
-    log_dir=f"./docs/logs/{os.environ.get('SLURM_JOB_NAME')}",
-    write_steps_per_second=True,
+    log_dir=f"./docs/logs/{datetime.now().strftime('%d.%m.%Y-%H_%M')}",
     update_freq="batch",
 )
 
+# * Logging
+print(
+    "---------------------------------------------------------------------------------------------------"
+)
+print("Details:")
+
+print("Classes: ", NUM_CLASSES)
+print("Batch size:", BATCH_SIZE)
+print("Epochs", EPOCHS)
+print(f"Training samples : {sum(1 for _ in training_dataset)}")
 
 print(
     "---------------------------------------------------------------------------------------------------"
@@ -119,7 +134,7 @@ print(
 model.fit(
     training_dataset,
     epochs=EPOCHS,
-    callbacks=[model_checkpoint_callback,tensorboard, early_stopping],
+    callbacks=[model_checkpoint_callback, tensorboard, early_stopping],
     validation_data=validation_dataset,
     verbose=2,
 )

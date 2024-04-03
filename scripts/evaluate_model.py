@@ -13,15 +13,21 @@ from sklearn.metrics import confusion_matrix
 from modules.pipeline import Pipeline
 from modules.crf import pre_defined_conditional_random_field
 from modules.plot import plot_confusion_matrix
+from modules.loss_functions import multi_class_tversky_loss
 
 # * Components
-model = keras.models.load_model(f"./models/{os.environ.get('SLURM_JOB_NAME')}")
+weights = [(1.5, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
+custom_loss_function = multi_class_tversky_loss(weights)
+with tf.keras.utils.custom_object_scope({"loss": custom_loss_function}):
+    model = tf.keras.models.load_model(f"./models/30e_64b_LTV+DA(1)")
+# model = keras.models.load_model(f"./models/{os.environ.get('SLURM_JOB_NAME')}")
+# model = keras.models.load_model(f"./models/30e_64b_LTV+DA(1)")
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
-    input_img_dir="data/img/test",
-    target_img_dir="data/masks/test",
-    # max_dataset_len=20,
+    input_img_dir="data/img/val",
+    target_img_dir="data/masks/val",
+    max_dataset_len=20,
 )
 test_dataset = pipeline.dataset
 pred_masks_probs = model.predict(test_dataset)
@@ -71,6 +77,7 @@ cm_classes = ["Background", "Building", "Woodland", "Water", "Road"]
 save_path = (
     f"./docs/models/{os.environ.get('SLURM_JOB_NAME')}/plots/confusion_matrix.png"
 )
+
 plot_confusion_matrix(
     cm_percentage,
     cm_classes,
