@@ -45,7 +45,6 @@ EPOCHS = 50
 
 # * Datasets
 MAX_NUMBER_SAMPLES = 50
-data_augmentation = True
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -56,7 +55,6 @@ training_pipeline.set_dataset_from_directory(
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
     # max_dataset_len=MAX_NUMBER_SAMPLES,
-    data_augmentation=data_augmentation
 )
 training_dataset = training_pipeline.dataset
 
@@ -69,7 +67,6 @@ validation_pipeline.set_dataset_from_directory(
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
     # max_dataset_len=MAX_NUMBER_SAMPLES
-    data_augmentation=data_augmentation
 )
 validation_dataset = validation_pipeline.dataset
 
@@ -79,12 +76,12 @@ model = model_architectures.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CL
 
 # # In order of Background, Building, Woodland, Water, Road
 # # (FP, FN)
-# weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
-# custom_loss_function = multi_class_tversky_loss(weights)
+weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
+custom_loss_function = multi_class_tversky_loss(weights)
 
 model.compile(
     optimizer=keras.optimizers.Adam(1e-4),
-    loss="sparse_categorical_crossentropy",
+    loss=custom_loss_function
 )
 
 # Callbacks
