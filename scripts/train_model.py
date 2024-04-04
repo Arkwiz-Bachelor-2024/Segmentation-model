@@ -10,7 +10,6 @@ import keras
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from natsort import natsorted
 
 import modules.model_architectures as model_architectures
 from modules.pipeline import Pipeline
