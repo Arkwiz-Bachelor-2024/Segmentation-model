@@ -1,10 +1,10 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
-#SBATCH --job-name=debug_resnet
+#SBATCH --job-name=U_NET_50e_64b+DA
 
-#SBATCH --time=0-01:00:00         # format: D-HH:MM:SS
+#SBATCH --time=0-06:00:00         # format: D-HH:MM:SS
 #SBATCH --partition=GPUQ          # Asking for a GPU
-#SBATCH --gres=gpu:1              # Number of GPUS
+#SBATCH --gres=gpu:2              # Number of GPUS
 #SBATCH --constraint="gpu40g"     # Type of GPU
 #SBATCH --mem=40G                 # Asking for RAM
 #SBATCH --nodes=1

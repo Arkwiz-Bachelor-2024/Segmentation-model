@@ -28,7 +28,6 @@ print(
 print("Enviroment:")
 
 print("TensorFlow version:", tf.__version__)
-print("Keras version:", keras.version())
 
 # Check available GPUs
 gpus = tf.config.list_physical_devices("GPU")
@@ -41,21 +40,23 @@ print(
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 8
-EPOCHS = 4
+BATCH_SIZE = 64
+EPOCHS = 50
 
 # * Datasets
 MAX_NUMBER_SAMPLES = 50
+data_augmentation = True
 
 # Trainig set
 training_pipeline = Pipeline()
 training_img_dir = "data/img/train"
 training_mask_dir = "data/masks/train"
-training_pipeline.set_dataset_from_directory_multi(
+training_pipeline.set_dataset_from_directory(
     input_img_dir=training_img_dir,
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
-    max_dataset_len=MAX_NUMBER_SAMPLES,
+    # max_dataset_len=MAX_NUMBER_SAMPLES,
+    data_augmentation=data_augmentation
 )
 training_dataset = training_pipeline.dataset
 
@@ -63,17 +64,18 @@ training_dataset = training_pipeline.dataset
 validation_img_dir = "data/img/val"
 validation_mask_dir = "data/masks/val"
 validation_pipeline = Pipeline()
-validation_pipeline.set_dataset_from_directory_multi(
+validation_pipeline.set_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
-    max_dataset_len=MAX_NUMBER_SAMPLES
+    # max_dataset_len=MAX_NUMBER_SAMPLES
+    data_augmentation=data_augmentation
 )
 validation_dataset = validation_pipeline.dataset
 
 
 # * Model
-model = model_architectures.get_ResNet_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
+model = model_architectures.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
 # # In order of Background, Building, Woodland, Water, Road
 # # (FP, FN)
@@ -82,14 +84,14 @@ model = model_architectures.get_ResNet_model(img_size=IMG_SIZE, num_classes=NUM_
 
 model.compile(
     optimizer=keras.optimizers.Adam(1e-4),
-    loss="spare",
+    loss="sparse_categorical_crossentropy",
 )
 
 # Callbacks
 early_stopping = keras.callbacks.EarlyStopping(
     monitor="val_loss",
     min_delta=0,
-    patience=2,
+    patience=8,
     verbose=1,
     mode="auto",
 )
@@ -103,16 +105,14 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
 )
 
 tensorboard = keras.callbacks.TensorBoard(
-    log_dir=f"./docs/logs/{datetime.now().strftime('%d.%m.%Y-%H_%M')}",
-    update_freq="batch",
+    log_dir=f"./docs/models/{os.environ.get('SLURM_JOB_NAME')}/logs/{datetime.now().strftime('%d.%m.%Y-%H_%M')}",
 )
 
 # * Logging
+print("Details:")
 print(
     "---------------------------------------------------------------------------------------------------"
 )
-print("Details:")
-
 print("Classes: ", NUM_CLASSES)
 print("Batch size:", BATCH_SIZE)
 print("Epochs", EPOCHS)
@@ -131,21 +131,7 @@ print("Training dataset: ", training_dataset)
 print(
     "---------------------------------------------------------------------------------------------------"
 )
-# * Logging
-print(
-    "---------------------------------------------------------------------------------------------------"
-)
-print("Details:")
 
-print("Classes: ", NUM_CLASSES)
-print("Batch size:", BATCH_SIZE)
-print("Epochs", EPOCHS)
-print("Training samples : ", training_dataset.__sizeof__)
-print("Validation samples : ", validation_dataset.__sizeof__)
-
-print(
-    "---------------------------------------------------------------------------------------------------"
-)
 model.fit(
     training_dataset,
     epochs=EPOCHS,

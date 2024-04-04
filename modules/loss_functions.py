@@ -48,6 +48,6 @@ def multi_class_tversky_loss(weights):
                 beta,
             )
 
-        return tversky_loss / num_classes
+        return 1 - (tversky_loss / num_classes)
 
     return loss
