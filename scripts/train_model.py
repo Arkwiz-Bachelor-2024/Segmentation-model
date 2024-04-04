@@ -86,9 +86,9 @@ model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
 early_stopping = keras.callbacks.EarlyStopping(
     monitor="val_loss",
     min_delta=0,
-    patience=8,
+    patience=4,
     verbose=1,
-    mode="auto",
+    mode="min",
 )
 
 CHECKPOINT_FILEPATH = f"./models/{os.environ.get('SLURM_JOB_NAME')}"
