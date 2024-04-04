@@ -1,6 +1,5 @@
 from tensorflow import keras
 from tensorflow.keras import layers
-import keras
 import numpy as np
 
 """
@@ -10,7 +9,8 @@ Code inspired by:
 https://keras.io/examples/vision/oxford_pets_image_segmentation/
 """
 
-def get_UNET_model(img_size, num_classes):
+
+def UNET_model(img_size, num_classes):
     inputs = keras.Input(shape=img_size + (3,))
 
     ### [First half of the network: downsampling inputs] ###
@@ -69,7 +69,7 @@ def get_UNET_model(img_size, num_classes):
     return model
 
 
-def get_ResNet_model(img_size, num_classes):
+def ResNet_model(img_size, num_classes):
     inputs = keras.Input(shape=img_size + (3,))
 
     encoder = keras.applications.ResNet101(
@@ -82,7 +82,7 @@ def get_ResNet_model(img_size, num_classes):
     x = encoder.output
 
     # Dropout
-    x = layers.Dropout(0.3)(x)
+    x = layers.Dropout(0.5)(x)
 
     # Decoder/Upsampling
     for filters in [256, 128, 64, 32]:
@@ -112,14 +112,11 @@ def get_ResNet_model(img_size, num_classes):
 
     return model
 
-def DeeplabV3Plus(image_size, num_classes):
-        
+
+def DeeplabV3Plus(img_size, num_classes):
+
     def convolution_block(
-        block_input,
-        num_filters=256,
-        kernel_size=3,
-        dilation_rate=1,
-        use_bias=False,
+        block_input, num_filters=256, kernel_size=3, dilation_rate=1, use_bias=False
     ):
         x = layers.Conv2D(
             num_filters,
@@ -130,15 +127,19 @@ def DeeplabV3Plus(image_size, num_classes):
             kernel_initializer=keras.initializers.HeNormal(),
         )(block_input)
         x = layers.BatchNormalization()(x)
-        return keras.ops.nn.relu(x)
-
+        x = layers.Activation("relu")(
+            x
+        )  # Changed from ops.nn.relu to Keras layer function
+        return x
 
     def DilatedSpatialPyramidPooling(dspp_input):
         dims = dspp_input.shape
-        x = layers.AveragePooling2D(pool_size=(dims[-3], dims[-2]))(dspp_input)
+        x = layers.AveragePooling2D(pool_size=(dims[1], dims[2]))(
+            dspp_input
+        )  # Adjusted indexing for batch shape
         x = convolution_block(x, kernel_size=1, use_bias=True)
         out_pool = layers.UpSampling2D(
-            size=(dims[-3] // x.shape[1], dims[-2] // x.shape[2]),
+            size=(dims[1] // x.shape[1], dims[2] // x.shape[2]),
             interpolation="bilinear",
         )(x)
 
@@ -151,7 +152,7 @@ def DeeplabV3Plus(image_size, num_classes):
         output = convolution_block(x, kernel_size=1)
         return output
 
-    model_input = keras.Input(shape=(image_size, image_size, 3))
+    model_input = keras.Input(shape=img_size + (3,))
     preprocessed = keras.applications.resnet50.preprocess_input(model_input)
     resnet50 = keras.applications.ResNet50(
         weights="imagenet", include_top=False, input_tensor=preprocessed
@@ -160,7 +161,7 @@ def DeeplabV3Plus(image_size, num_classes):
     x = DilatedSpatialPyramidPooling(x)
 
     input_a = layers.UpSampling2D(
-        size=(image_size // 4 // x.shape[1], image_size // 4 // x.shape[2]),
+        size=(img_size[0] // 4 // x.shape[1], img_size[1] // 4 // x.shape[2]),
         interpolation="bilinear",
     )(x)
     input_b = resnet50.get_layer("conv2_block3_2_relu").output
@@ -170,7 +171,7 @@ def DeeplabV3Plus(image_size, num_classes):
     x = convolution_block(x)
     x = convolution_block(x)
     x = layers.UpSampling2D(
-        size=(image_size // x.shape[1], image_size // x.shape[2]),
+        size=(img_size[0] // x.shape[1], img_size[1] // x.shape[2]),
         interpolation="bilinear",
     )(x)
     model_output = layers.Conv2D(num_classes, kernel_size=(1, 1), padding="same")(x)

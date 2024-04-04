@@ -54,6 +54,7 @@ training_pipeline.set_dataset_from_directory(
     input_img_dir=training_img_dir,
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
+    per_class_masks=True,
     # max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 training_dataset = training_pipeline.dataset
@@ -72,17 +73,14 @@ validation_dataset = validation_pipeline.dataset
 
 
 # * Model
-model = model_architectures.get_UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
+model = model_architectures.UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
 # # In order of Background, Building, Woodland, Water, Road
 # # (FP, FN)
 weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
 custom_loss_function = multi_class_tversky_loss(weights)
 
-model.compile(
-    optimizer=keras.optimizers.Adam(1e-4),
-    loss=custom_loss_function
-)
+model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
 
 # Callbacks
 early_stopping = keras.callbacks.EarlyStopping(
@@ -113,8 +111,6 @@ print(
 print("Classes: ", NUM_CLASSES)
 print("Batch size:", BATCH_SIZE)
 print("Epochs", EPOCHS)
-print(f"Training samples : {sum(1 for _ in training_dataset)}")
-
 print(
     "---------------------------------------------------------------------------------------------------"
 )
