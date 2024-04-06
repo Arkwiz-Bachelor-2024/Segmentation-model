@@ -39,11 +39,11 @@ print(
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 64
-EPOCHS = 50
+BATCH_SIZE = 8
+EPOCHS = 200
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 50
+# MAX_NUMBER_SAMPLES = 50
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -66,70 +66,79 @@ validation_pipeline.set_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
+    per_class_masks=True
     # max_dataset_len=MAX_NUMBER_SAMPLES
 )
 validation_dataset = validation_pipeline.dataset
 
+strategy = tf.distribute.MirroredStrategy()
 
-# * Model
-model = model_architectures.UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
+# Utilization of multi-GPU acceleration
+with strategy.scope():
 
-# # In order of Background, Building, Woodland, Water, Road
-# # (FP, FN)
-weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
-custom_loss_function = multi_class_tversky_loss(weights)
+    # * Model
+    model = model_architectures.UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
-model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
+    # # In order of Background, Building, Woodland, Water, Road
+    # # (FP, FN)
+    weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
+    custom_loss_function = multi_class_tversky_loss(weights)
 
-# Callbacks
-early_stopping = keras.callbacks.EarlyStopping(
+
+    # Callbacks
+    early_stopping = keras.callbacks.EarlyStopping(
     monitor="val_loss",
     min_delta=0,
-    patience=4,
+    patience=10,
     verbose=1,
     mode="min",
-)
+    )
 
-CHECKPOINT_FILEPATH = f"./models/{os.environ.get('SLURM_JOB_NAME')}"
-model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
+    CHECKPOINT_FILEPATH = f"./models/{os.environ.get('SLURM_JOB_NAME')}"
+    model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=CHECKPOINT_FILEPATH,
     mode="min",
     verbose=1,
     save_best_only=True,
-)
+    )
 
-tensorboard = keras.callbacks.TensorBoard(
+    tensorboard = keras.callbacks.TensorBoard(
     log_dir=f"./docs/models/{os.environ.get('SLURM_JOB_NAME')}/logs/{datetime.now().strftime('%d.%m.%Y-%H_%M')}",
-)
+    )
 
-# * Logging
-print("Details:")
-print(
+    # * Logging
+    print("Details:")
+    print(
     "---------------------------------------------------------------------------------------------------"
-)
-print("Classes: ", NUM_CLASSES)
-print("Batch size:", BATCH_SIZE)
-print("Epochs", EPOCHS)
-print(
+    )
+    print("Classes: ", NUM_CLASSES)
+    print("Batch size:", BATCH_SIZE)
+    print("Epochs", EPOCHS)
+    print(
     "---------------------------------------------------------------------------------------------------"
-)
-print("Data shape")
-# Shapes of the data
-for x, y in training_dataset.take(1):
-    print(f"Image shape: {x.shape}")
-    print(f"Mask shape: {y.shape}")
+    )
+    print("Data shape")
+    # Shapes of the data
+    for x, y in training_dataset.take(1):
 
-print("Training dataset: ", training_dataset)
-print(
+        print(f"Image shape: {x.shape}")
+        print(f"Mask shape: {y.shape}")
+
+    print("Training dataset: ", training_dataset)
+    print("Validation dataset:", validation_dataset)
+    print(
     "---------------------------------------------------------------------------------------------------"
-)
+    )
 
-model.fit(
-    training_dataset,
-    epochs=EPOCHS,
-    callbacks=[model_checkpoint_callback, tensorboard, early_stopping],
-    validation_data=validation_dataset,
-    verbose=2,
-)
+    model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
 
-print("Training completed")
+    model.fit(
+        training_dataset,
+        epochs=EPOCHS,
+        callbacks=[model_checkpoint_callback, tensorboard, early_stopping],
+        validation_data=validation_dataset,
+        verbose=2,
+        run_eagerly=True
+    )
+
+    print("Training completed")
