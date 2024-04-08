@@ -15,6 +15,9 @@ import modules.model_architectures as model_architectures
 from modules.pipeline import Pipeline
 from modules.loss_functions import multi_class_tversky_loss
 
+
+import pdb
+
 """
 This script an initiator to train a segmentation model based upon the specified parameters in the script.
 
@@ -39,11 +42,11 @@ print(
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 8
+BATCH_SIZE = 2
 EPOCHS = 200
 
 # * Datasets
-# MAX_NUMBER_SAMPLES = 50
+MAX_NUMBER_SAMPLES = 10
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -54,7 +57,7 @@ training_pipeline.set_dataset_from_directory(
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
     per_class_masks=True,
-    # max_dataset_len=MAX_NUMBER_SAMPLES,
+    max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 training_dataset = training_pipeline.dataset
 
@@ -66,8 +69,8 @@ validation_pipeline.set_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
-    per_class_masks=True
-    # max_dataset_len=MAX_NUMBER_SAMPLES
+    per_class_masks=True,
+    max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 validation_dataset = validation_pipeline.dataset
 
@@ -84,38 +87,37 @@ with strategy.scope():
     weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
     custom_loss_function = multi_class_tversky_loss(weights)
 
-
     # Callbacks
     early_stopping = keras.callbacks.EarlyStopping(
-    monitor="val_loss",
-    min_delta=0,
-    patience=10,
-    verbose=1,
-    mode="min",
+        monitor="val_loss",
+        min_delta=0,
+        patience=10,
+        verbose=1,
+        mode="min",
     )
 
     CHECKPOINT_FILEPATH = f"./models/{os.environ.get('SLURM_JOB_NAME')}"
     model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
-    filepath=CHECKPOINT_FILEPATH,
-    mode="min",
-    verbose=1,
-    save_best_only=True,
+        filepath=CHECKPOINT_FILEPATH,
+        mode="min",
+        verbose=1,
+        save_best_only=True,
     )
 
     tensorboard = keras.callbacks.TensorBoard(
-    log_dir=f"./docs/models/{os.environ.get('SLURM_JOB_NAME')}/logs/{datetime.now().strftime('%d.%m.%Y-%H_%M')}",
+        log_dir=f"./docs/models/{os.environ.get('SLURM_JOB_NAME')}/logs/{datetime.now().strftime('%d.%m.%Y-%H_%M')}",
     )
 
     # * Logging
     print("Details:")
     print(
-    "---------------------------------------------------------------------------------------------------"
+        "---------------------------------------------------------------------------------------------------"
     )
     print("Classes: ", NUM_CLASSES)
     print("Batch size:", BATCH_SIZE)
     print("Epochs", EPOCHS)
     print(
-    "---------------------------------------------------------------------------------------------------"
+        "---------------------------------------------------------------------------------------------------"
     )
     print("Data shape")
     # Shapes of the data
@@ -127,10 +129,12 @@ with strategy.scope():
     print("Training dataset: ", training_dataset)
     print("Validation dataset:", validation_dataset)
     print(
-    "---------------------------------------------------------------------------------------------------"
+        "---------------------------------------------------------------------------------------------------"
     )
 
     model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
+
+    tf.keras.Model.run_eagerly = True
 
     model.fit(
         training_dataset,
@@ -138,7 +142,6 @@ with strategy.scope():
         callbacks=[model_checkpoint_callback, tensorboard, early_stopping],
         validation_data=validation_dataset,
         verbose=2,
-        run_eagerly=True
     )
 
     print("Training completed")
