@@ -14,8 +14,7 @@ def __tversky_index__(y_true, y_pred, alpha, beta, smooth=1e-6):
     false_positives = K.sum((1 - y_true) * y_pred)
     false_negatives = K.sum(y_true * (1 - y_pred))
     return (
-        2
-        * (true_positives + smooth)
+        2 * (true_positives + smooth)
         / (true_positives + alpha * false_positives + beta * false_negatives + smooth)
     )
 

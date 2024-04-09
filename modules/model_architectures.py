@@ -157,6 +157,11 @@ def DeeplabV3Plus(img_size, num_classes):
     resnet50 = keras.applications.ResNet50(
         weights="imagenet", include_top=False, input_tensor=preprocessed
     )
+
+    # Freeze the layers
+    for layer in resnet50.layers:
+        layer.trainable = False
+
     x = resnet50.get_layer("conv4_block6_2_relu").output
     x = DilatedSpatialPyramidPooling(x)
 

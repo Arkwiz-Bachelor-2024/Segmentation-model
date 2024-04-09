@@ -5,9 +5,9 @@ import os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
-import keras
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 import matplotlib.pyplot as plt
 
 from matplotlib.colors import ListedColormap
@@ -16,7 +16,7 @@ from modules.crf import custom_conditional_random_field, crf_mask_grid_search
 from modules.plot import simple_image_display
 
 # * Components
-model = keras.models.load_model("./models/model.keras")
+model = keras.models.load_model("./models/seg_model_10e_64b_+DA")
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory_multi(
     batch_size=1,

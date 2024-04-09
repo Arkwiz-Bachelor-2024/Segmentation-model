@@ -1,10 +1,10 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
-#SBATCH --job-name=U_NET_200e_8b_dice+DA
+#SBATCH --job-name=Deeplabv3Plus_200e_4b_Centropy+DA
 
-#SBATCH --time=0-06:00:00         # format: D-HH:MM:SS
+#SBATCH --time=0-13:00:00         # format: D-HH:MM:SS
 #SBATCH --partition=GPUQ          # Asking for a GPU
-#SBATCH --gres=gpu:2              # Number of GPUS
+#SBATCH --gres=gpu:3              # Number of GPUS
 #SBATCH --mem=40G                 # Asking for RAM
 #SBATCH --nodes=1
 
@@ -32,8 +32,7 @@ echo "---------------------------------------------------------"
 echo "The name of the job is: $SLURM_JOB_NAME"
 echo "The job ID is $SLURM_JOB_ID"
 echo "---------------------------------------------------------"
-echo "The job was run on these nodes: $SLURM_JOB_NODELIST"
-echo "Number of nodes: $SLURM_JOB_NUM_NODES"
+echo "Number of GPUs : $SLURM_JOB_GPUS"
 echo "---------------------------------------------------------"
 echo "Assert Enviroment modules are loaded..."
 module load TensorFlow/2.11.0-foss-2022a-CUDA-11.7.0
