@@ -56,14 +56,14 @@ crf_grid_details = crf_mask_grid_search(
 )
 
 crf_grid_masks = [detail["mask"] for detail in crf_grid_details]
-crf_grid_scores = [str(round(detail["score"], 2)) for detail in crf_grid_details]
-crf_grid_parameters = [
-    (str(detail["parameters"].values())) for detail in crf_grid_details
-]
+crf_grid_scores = [str(round(detail["score"], 4)) for detail in crf_grid_details]
+crf_grid_parameters = [(str(detail["parameters"])) for detail in crf_grid_details]
 
 print(crf_grid_details)
 print(crf_grid_scores)
 print(crf_grid_parameters)
+
+tests = ["", "", ""]
 
 simple_image_display(
     images=crf_grid_masks,

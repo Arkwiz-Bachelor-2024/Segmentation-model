@@ -16,11 +16,6 @@ from modules.plot import plot_confusion_matrix
 from modules.loss_functions import multi_class_tversky_loss
 
 # * Components
-weights = [(1.5, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
-custom_loss_function = multi_class_tversky_loss(weights)
-# with tf.keras.utils.custom_object_scope({"loss": custom_loss_function}):
-#     model = tf.keras.models.load_model(f"./models/30e_64b_LTV+DA(1)")
-# model = keras.models.load_model(f"./models/{os.environ.get('SLURM_JOB_NAME')}")
 model = keras.models.load_model(f"./models/U_NET_50e_64b+DA", compile=False)
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
@@ -32,7 +27,6 @@ pipeline.set_dataset_from_directory(
 test_dataset = pipeline.dataset
 pred_masks_probs = model.predict(test_dataset)
 raw_masks = np.argmax(pred_masks_probs, axis=-1)
-
 
 NUM_CLASSES = 5
 # Initialize the MeanIoU metric

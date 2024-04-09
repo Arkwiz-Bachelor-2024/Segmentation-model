@@ -57,6 +57,7 @@ def plot_confusion_matrix(cm, class_names, save_path):
     Args:
     - cm: The confusion matrix to plot.
     - class_names: An array of labels for the classes.
+    - save_path: The path to save the plot.
     """
     fig, ax = plt.subplots(figsize=(10, 8))
     im = ax.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
