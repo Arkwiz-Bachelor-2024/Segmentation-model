@@ -26,13 +26,7 @@ from modules.plot import simple_image_display
 from modules.loss_functions import multi_class_tversky_loss
 
 # * Components
-
-# weights = [(1.5, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
-# custom_loss_function = multi_class_tversky_loss(weights)
-# with tf.keras.utils.custom_object_scope({"loss": custom_loss_function}):
-#     model = tf.keras.models.load_model(f"./models/debug", compile=False)
-model = keras.models.load_model("./models/debug_resnet", compile=False)
-
+model = keras.models.load_model("./models/10epoch_32b.keras", compile=False)
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
@@ -53,95 +47,109 @@ cmap = ListedColormap(colors)
 
 # [ 537 1014 1190   71   84 1305 1215   86 1184  547]
 images = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
+
 # * Samples
-image_name = "N-33-130-A-d-4-4_249.jpg"
-image_number = 1014
-# samples = pipeline.get_sample_by_filename(image_name)
-samples = pipeline.get_sample_by_index(image_number, 1)
-image = samples[0]
-mask = samples[1]
 
-# Predictions
-print(image.shape)
-image_with_batch = np.expand_dims(image, axis=0)
-pred_mask_probs = model.predict(image)
-image = image.numpy().squeeze()
+for i in images:
 
-# * Masks
-mask = tf.squeeze(mask)
-mask = mask.numpy()
-pred_mask = np.argmax(pred_mask_probs.squeeze(), axis=-1)
-crf_mask = pre_defined_conditional_random_field(
-    image=image,
-    pred_mask_probs=pred_mask_probs,
-    inference_iterations=3,
-)
+    image_name = "test"
+    # image_number = 1014
+    # samples = pipeline.get_sample_by_filename(image_name)
 
-print("----------------------------------------------------------------------")
-print("Image details(shape, type):")
-print("Image", image.shape, type(image))
-print("Mask", mask.shape, type(mask))
-print("Pred_mask", pred_mask.shape, type(pred_mask))
-print("CRF_mask", crf_mask.shape, type(crf_mask))
-print("----------------------------------------------------------------------")
+    samples = pipeline.get_sample_by_index(i, 1)
+    image = samples[0]
+    mask = samples[1]
 
-meanIOU_crf_score = get_mIOU(mask, crf_mask, mask.shape[-1])
-meanIOU_pred_score = get_mIOU(mask, pred_mask, mask.shape[-1])
+    # Predictions
+    print(image.shape)
+    image_with_batch = np.expand_dims(image, axis=0)
+    pred_mask_probs = model.predict(image)
+    image = image.numpy().squeeze()
 
-OA_pred = get_OA(mask, pred_mask)
-OA_crf = get_OA(mask, crf_mask)
+    # * Masks
+    mask = tf.squeeze(mask)
+    mask = mask.numpy()
+    pred_mask = np.argmax(pred_mask_probs.squeeze(), axis=-1)
+    crf_mask = pre_defined_conditional_random_field(
+        image=image,
+        pred_mask_probs=pred_mask_probs,
+        inference_iterations=3,
+    )
 
-gt_distribution_percentages = get_class_distribution(image=mask)
-pred_distribution_percentages = get_class_distribution(image=pred_mask)
-crf_distribution_percentages = get_class_distribution(image=crf_mask)
+    print("----------------------------------------------------------------------")
+    print("Image details(shape, type):")
+    print("Image", image.shape, type(image))
+    print("Mask", mask.shape, type(mask))
+    print("Pred_mask", pred_mask.shape, type(pred_mask))
+    print("CRF_mask", crf_mask.shape, type(crf_mask))
+    print("----------------------------------------------------------------------")
 
-gt_distribution_str = ", ".join(
-    [f"{cls}: {percent:.2%}" for cls, percent in gt_distribution_percentages.items()]
-)
-pred_distribution_str = ", ".join(
-    [f"{cls}: {percent:.2%}" for cls, percent in pred_distribution_percentages.items()]
-)
-crf_distribution_str = ", ".join(
-    [f"{cls}: {percent:.2%}" for cls, percent in crf_distribution_percentages.items()]
-)
+    meanIOU_crf_score = get_mIOU(mask, crf_mask, mask.shape[-1])
+    meanIOU_pred_score = get_mIOU(mask, pred_mask, mask.shape[-1])
 
-print("Prediction details:")
-print("----------------------------------------------------------------------")
-print("MeanIOU pred_score: ", meanIOU_pred_score)
-print("MeanIOU crf_score: ", meanIOU_crf_score)
-print("----------------------------------------------------------------------")
+    OA_pred = get_OA(mask, pred_mask)
+    OA_crf = get_OA(mask, crf_mask)
 
-plot_images = [image, mask, pred_mask, crf_mask]
-plot_titles = [
-    f"Image\n {image_name or image_number}",
-    "Ground truth",
-    "Prediction mask",
-    "CRF mask",
-]
+    gt_distribution_percentages = get_class_distribution(image=mask)
+    pred_distribution_percentages = get_class_distribution(image=pred_mask)
+    crf_distribution_percentages = get_class_distribution(image=crf_mask)
 
-plot_image_details = []
-plot_mask_details = [f"Class Distribution: {gt_distribution_str}"]
-plot_pred_mask_details = [
-    f"Class Distribution: {pred_distribution_str}",
-    f"mIOU: {meanIOU_pred_score:.2} ",
-    f"OA: {OA_pred:.2}",
-]
-plot_crf_mask_details = [
-    f"Class Distribution: {crf_distribution_str}",
-    f"mIOU: {meanIOU_crf_score:.2} ",
-    f"OA: {OA_crf:.2}",
-]
+    gt_distribution_str = ", ".join(
+        [
+            f"{cls}: {percent:.2%}"
+            for cls, percent in gt_distribution_percentages.items()
+        ]
+    )
+    pred_distribution_str = ", ".join(
+        [
+            f"{cls}: {percent:.2%}"
+            for cls, percent in pred_distribution_percentages.items()
+        ]
+    )
+    crf_distribution_str = ", ".join(
+        [
+            f"{cls}: {percent:.2%}"
+            for cls, percent in crf_distribution_percentages.items()
+        ]
+    )
 
-plot_description = [
-    plot_image_details,
-    plot_mask_details,
-    plot_pred_mask_details,
-    plot_crf_mask_details,
-]
+    print("Prediction details:")
+    print("----------------------------------------------------------------------")
+    print("MeanIOU pred_score: ", meanIOU_pred_score)
+    print("MeanIOU crf_score: ", meanIOU_crf_score)
+    print("----------------------------------------------------------------------")
 
-simple_image_display(
-    titles=plot_titles,
-    images=plot_images,
-    descriptions=plot_description,
-    color_map=cmap,
-)
+    plot_images = [image, mask, pred_mask, crf_mask]
+    plot_titles = [
+        f"Image\n {image_name or image_number}",
+        "Ground truth",
+        "Prediction mask",
+        "CRF mask",
+    ]
+
+    plot_image_details = []
+    plot_mask_details = [f"Class Distribution: {gt_distribution_str}"]
+    plot_pred_mask_details = [
+        f"Class Distribution: {pred_distribution_str}",
+        f"mIOU: {meanIOU_pred_score:.2} ",
+        f"OA: {OA_pred:.2}",
+    ]
+    plot_crf_mask_details = [
+        f"Class Distribution: {crf_distribution_str}",
+        f"mIOU: {meanIOU_crf_score:.2} ",
+        f"OA: {OA_crf:.2}",
+    ]
+
+    plot_description = [
+        plot_image_details,
+        plot_mask_details,
+        plot_pred_mask_details,
+        plot_crf_mask_details,
+    ]
+
+    simple_image_display(
+        titles=plot_titles,
+        images=plot_images,
+        descriptions=plot_description,
+        color_map=cmap,
+    )

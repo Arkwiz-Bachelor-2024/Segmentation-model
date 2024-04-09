@@ -13,7 +13,6 @@ def __tversky_index_class__(class_id, y_true, y_pred, alpha, beta, smooth=1e-6):
     """
 
     # One-hot encode and cast to float32
-    pdb.set_trace()
     y_true = K.cast(K.equal(y_true, class_id), "float32")
 
     true_positives = K.sum(y_true * y_pred)

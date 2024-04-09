@@ -80,7 +80,9 @@ strategy = tf.distribute.MirroredStrategy()
 with strategy.scope():
 
     # * Model
-    model = model_architectures.UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
+    model = model_architectures.DeeplabV3Plus(
+        img_size=IMG_SIZE, num_classes=NUM_CLASSES
+    )
 
     # # In order of Background, Building, Woodland, Water, Road
     # # (FP, FN)
@@ -133,8 +135,6 @@ with strategy.scope():
     )
 
     model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
-
-    tf.keras.Model.run_eagerly = True
 
     model.fit(
         training_dataset,
