@@ -117,7 +117,7 @@ class Pipeline:
         target_img = tf_image.convert_image_dtype(target_img, "uint8")
 
         # Data augmentation which will be applied diffrently each epoch giving different versions of the images each time.
-        input_img, target_img = self.__augment_image__(input_img, target_img)
+        # input_img, target_img = self.__augment_image__(input_img, target_img)
 
         return input_img, target_img
 
@@ -153,9 +153,9 @@ class Pipeline:
         target_img_one_hot = tf.squeeze(target_img_one_hot, axis=-2)
 
         # Data augmentation which will be applied differently each epoch giving different versions of the images each time.
-        input_img, target_img_one_hot = self.__augment_image__(
-            input_img, target_img_one_hot
-        )
+        # input_img, target_img_one_hot = self.__augment_image__(
+        #     input_img, target_img_one_hot
+        # )
 
         return input_img, target_img_one_hot
 
