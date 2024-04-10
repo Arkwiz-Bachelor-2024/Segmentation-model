@@ -5,10 +5,14 @@ Module containing custom loss functions used with Keras API.
 """
 
 
-# Smooth is added to avoid dividing by 0
-def __tversky_index__(y_true, y_pred, alpha, beta, smooth=1e-6):
-    # Cast mask to float for operations
-    y_true = K.cast(y_true, "float32")
+# Smooth is added to avoid dividing by 1
+def __tversky_index_class__(class_id, y_true, y_pred, alpha, beta, smooth=100):
+    """
+    Calculates the tvernsky index for a given class id.
+    """
+
+    # One-hot encode and cast to float32
+    y_true = K.cast(K.equal(y_true, class_id), "float32")
 
     true_positives = K.sum(y_true * y_pred)
     false_positives = K.sum((1 - y_true) * y_pred)
@@ -23,6 +27,7 @@ def multi_class_tversky_loss(weights):
     """
     Calculates the total loss based on pre-determined weights for each class.
     Expects a list of tuples corresponding to the weights of its respective class
+    Format: (FP, FN) for each class
     e.g [(1,1), (0.7,0.8)......]
 
     """
@@ -38,8 +43,9 @@ def multi_class_tversky_loss(weights):
 
         for class_idx in range(num_classes):
             alpha, beta = weights[class_idx]
-            tversky_loss += __tversky_index__(
-                # ... slices all other axies in this case for each time in the for loop it will
+            tversky_loss += __tversky_index_class__(
+                class_idx,
+                # ... slices all other axies before the ... ,in this case for each time in the for loop it will
                 # "slice" out a 2D array containing predictions on that class
                 y_true[..., class_idx],
                 y_pred[..., class_idx],

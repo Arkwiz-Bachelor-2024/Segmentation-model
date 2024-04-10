@@ -77,6 +77,7 @@ def crf_mask_grid_search(
     results = []  # List to store parameter sets with their scores
 
     for sdims in sdims_options:
+        print(f"Processing sdims: {sdims}")
         for compats in compats_options:
             compat_gaussian, compat_bilateral = compats
             crf_masks = []  # Store masks generated with the current parameter set
@@ -84,7 +85,7 @@ def crf_mask_grid_search(
             # Generate 10 CRF masks for the current parameter combination
             for image, pred_mask_probs in zip(images, pred_mask_probs_list):
                 crf_mask = custom_conditional_random_field(
-                    image=image.numpy(),
+                    image=image.numpy().squeeze(),
                     pred_mask_probs=pred_mask_probs,
                     sdim=sdims,
                     schan=(10, 10, 10),

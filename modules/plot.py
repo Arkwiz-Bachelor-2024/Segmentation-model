@@ -12,10 +12,10 @@ def simple_image_display(titles, images, descriptions, color_map):
     - descriptions: list of list of str, each list contains parts of the description for each image.
     """
     if not images or not descriptions or not titles:
-        raise valueerror("titles, images, and descriptions must be non-empty lists.")
+        raise ValueError("titles, images, and descriptions must be non-empty lists.")
 
     if len(images) != len(descriptions) or len(images) != len(titles):
-        raise valueerror(
+        raise ValueError(
             "titles, images, and descriptions must be lists of the same length."
         )
 

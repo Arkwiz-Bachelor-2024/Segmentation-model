@@ -43,7 +43,7 @@ BATCH_SIZE = 12
 EPOCHS = 200
 
 # * Datasets
-# MAX_NUMBER_SAMPLES = 50
+MAX_NUMBER_SAMPLES = 10
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -53,7 +53,7 @@ training_pipeline.set_dataset_from_directory(
     input_img_dir=training_img_dir,
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
-    # per_class_masks=True,
+    per_class_masks=True,
     # max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 training_dataset = training_pipeline.dataset
@@ -66,7 +66,7 @@ validation_pipeline.set_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
-    # per_class_masks=True
+    per_class_masks=True
     # max_dataset_len=MAX_NUMBER_SAMPLES
 )
 validation_dataset = validation_pipeline.dataset
@@ -77,45 +77,46 @@ strategy = tf.distribute.MirroredStrategy()
 with strategy.scope():
 
     # * Model
-    model = model_architectures.DeeplabV3Plus(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
+    model = model_architectures.DeeplabV3Plus(
+        img_size=IMG_SIZE, num_classes=NUM_CLASSES
+    )
 
     # # In order of Background, Building, Woodland, Water, Road
     # # (FP, FN)
-    # weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
-    # custom_loss_function = multi_class_tversky_loss(weights)
-
+    weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
+    custom_loss_function = multi_class_tversky_loss(weights)
 
     # Callbacks
     early_stopping = keras.callbacks.EarlyStopping(
-    monitor="val_loss",
-    min_delta=0,
-    patience=10,
-    verbose=1,
-    mode="min",
+        monitor="val_loss",
+        min_delta=0,
+        patience=10,
+        verbose=1,
+        mode="min",
     )
 
     CHECKPOINT_FILEPATH = f"./models/{os.environ.get('SLURM_JOB_NAME')}"
     model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
-    filepath=CHECKPOINT_FILEPATH,
-    mode="min",
-    verbose=1,
-    save_best_only=True,
+        filepath=CHECKPOINT_FILEPATH,
+        mode="min",
+        verbose=1,
+        save_best_only=True,
     )
 
     tensorboard = keras.callbacks.TensorBoard(
-    log_dir=f"./docs/models/{os.environ.get('SLURM_JOB_NAME')}/logs/{datetime.now().strftime('%d.%m.%Y-%H_%M')}",
+        log_dir=f"./docs/models/{os.environ.get('SLURM_JOB_NAME')}/logs/{datetime.now().strftime('%d.%m.%Y-%H_%M')}",
     )
 
     # * Logging
     print("Details:")
     print(
-    "---------------------------------------------------------------------------------------------------"
+        "---------------------------------------------------------------------------------------------------"
     )
     print("Classes: ", NUM_CLASSES)
     print("Total batch size:", BATCH_SIZE)
     print("Epochs", EPOCHS)
     print(
-    "---------------------------------------------------------------------------------------------------"
+        "---------------------------------------------------------------------------------------------------"
     )
     print("Data shape")
     # Shapes of the data
@@ -127,10 +128,10 @@ with strategy.scope():
     print("Training dataset: ", training_dataset)
     print("Validation dataset:", validation_dataset)
     print(
-    "---------------------------------------------------------------------------------------------------"
+        "---------------------------------------------------------------------------------------------------"
     )
 
-    model.compile(optimizer=keras.optimizers.Adam(1e-4), loss="sparse_categorical_crossentropy")
+    model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
 
     model.fit(
         training_dataset,

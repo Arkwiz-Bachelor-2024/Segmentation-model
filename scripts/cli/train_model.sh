@@ -1,8 +1,8 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
-#SBATCH --job-name=Deeplabv3Plus_200e_4b_Centropy+DA
+#SBATCH --job-name=Deeplabv3Plus_200e_4b_dice+DA
 
-#SBATCH --time=0-13:00:00         # format: D-HH:MM:SS
+#SBATCH --time=0-10:00:00         # format: D-HH:MM:SS
 #SBATCH --partition=GPUQ          # Asking for a GPU
 #SBATCH --gres=gpu:3              # Number of GPUS
 #SBATCH --mem=40G                 # Asking for RAM

@@ -18,15 +18,15 @@ from modules.loss_functions import multi_class_tversky_loss
 # * Components
 weights = [(1.5, 1), (1.5, 1.5), (1, 1), (1.5, 1.5), (1, 1)]
 custom_loss_function = multi_class_tversky_loss(weights)
-with tf.keras.utils.custom_object_scope({"loss": custom_loss_function}):
-    model = tf.keras.models.load_model(f"./models/30e_64b_LTV+DA(1)")
+# with tf.keras.utils.custom_object_scope({"loss": custom_loss_function}):
+#     model = tf.keras.models.load_model(f"./models/30e_64b_LTV+DA(1)")
 # model = keras.models.load_model(f"./models/{os.environ.get('SLURM_JOB_NAME')}")
-# model = keras.models.load_model(f"./models/30e_64b_LTV+DA(1)")
+model = keras.models.load_model(f"./models/U_NET_50e_64b+DA", compile=False)
 pipeline = Pipeline()
-pipeline.set_dataset_from_directory_multi(
+pipeline.set_dataset_from_directory(
     batch_size=1,
-    input_img_dir="data/img/val",
-    target_img_dir="data/masks/val",
+    input_img_dir="data/img/test",
+    target_img_dir="data/masks/test",
     max_dataset_len=20,
 )
 test_dataset = pipeline.dataset
@@ -72,16 +72,18 @@ cm_percentage = cm_normalized * 100  # Convert to percentages
 raw_IoU = raw_miou_metric.result().numpy()
 crf_IoU = crf_miou_metric.result().numpy()
 
-
 cm_classes = ["Background", "Building", "Woodland", "Water", "Road"]
-save_path = (
-    f"./docs/models/{os.environ.get('SLURM_JOB_NAME')}/plots/confusion_matrix.png"
-)
+# Check if the directory exists
+save_dir = "./docs/models/test/plots/"
+if not os.path.exists(save_dir):
+    # If the directory does not exist, create it
+    os.makedirs(save_dir)
 
+# Now proceed to save your file as before
 plot_confusion_matrix(
     cm_percentage,
     cm_classes,
-    save_path=save_path,
+    save_path=f"{save_dir}cm_matrix.png",
 )
 print(f"Raw mIoU over the test set: {raw_IoU:.2}")
 print(f"Crf mIoU over the test set: {crf_IoU:.2}")

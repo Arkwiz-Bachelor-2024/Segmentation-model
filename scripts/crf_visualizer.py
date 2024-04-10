@@ -18,7 +18,7 @@ from modules.plot import simple_image_display
 # * Components
 model = keras.models.load_model("./models/seg_model_10e_64b_+DA")
 pipeline = Pipeline()
-pipeline.set_dataset_from_directory_multi(
+pipeline.set_dataset_from_directory(
     batch_size=1,
     input_img_dir="data/img/test",
     target_img_dir="data/masks/test",
@@ -31,7 +31,6 @@ cmap = ListedColormap(colors)
 
 even_images_indecies = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
 
-
 images = []
 masks = []
 for index in even_images_indecies:
@@ -41,8 +40,8 @@ for index in even_images_indecies:
 
 pred_mask_probs_list = []
 for image in images:
-    image_with_batch = np.expand_dims(image, axis=0)
-    pred_mask_probs_list.append(model.predict(image_with_batch))
+    # image_with_batch = np.expand_dims(image, axis=0)
+    pred_mask_probs_list.append(model.predict(image))
 
 # TODO refactor to different sdims for each potential
 sdims_options = [(3, 3), (1, 1), (5, 5)]
@@ -57,15 +56,18 @@ crf_grid_details = crf_mask_grid_search(
 )
 
 crf_grid_masks = [detail["mask"] for detail in crf_grid_details]
-crf_grid_scores = [detail["score"] for detail in crf_grid_details]
+crf_grid_scores = [str(round(detail["score"], 2)) for detail in crf_grid_details]
 crf_grid_parameters = [
-    list(str(detail["parameters"].values())) for detail in crf_grid_details
+    (str(detail["parameters"].values())) for detail in crf_grid_details
 ]
 
+print(crf_grid_details)
+print(crf_grid_scores)
+print(crf_grid_parameters)
 
 simple_image_display(
     images=crf_grid_masks,
-    titles=crf_grid_parameters,
+    titles=tests,
     descriptions=crf_grid_scores,
     color_map=cmap,
 )
