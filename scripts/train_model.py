@@ -144,11 +144,16 @@ with strategy.scope():
         """Helper function to retrieve the scheduled learning rate based on epoch."""
 
         # Linear growth up until first scheduled learning rate.
-        if epoch < LR_SCHEDULE[0][0]:
-            return 0.001 * epoch
+        if epoch <= 10:
+            return 0.003 * epoch 
+
+        if epoch < LR_SCHEDULE[0][0] or epoch > LR_SCHEDULE[-1][0]:
+                return lr
+
         for i in range(len(LR_SCHEDULE)):
             if epoch == LR_SCHEDULE[i][0]:
                 return LR_SCHEDULE[i][1]
+
         return lr
 
     # Mini batch - SGD

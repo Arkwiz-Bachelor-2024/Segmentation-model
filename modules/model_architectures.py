@@ -1,5 +1,5 @@
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import layers 
 import numpy as np
 
 """
@@ -40,6 +40,8 @@ def UNET_model(img_size, num_classes):
         )
         x = layers.add([x, residual])  # Add back residual
         previous_block_activation = x  # Set aside next residual
+
+    x = layers.Dropout(0.5)(x)
 
     ### [Second half of the network: upsampling inputs] ###
 
@@ -149,6 +151,7 @@ def DeeplabV3Plus(img_size, num_classes):
         out_18 = convolution_block(dspp_input, kernel_size=3, dilation_rate=18)
 
         x = layers.Concatenate(axis=-1)([out_pool, out_1, out_6, out_12, out_18])
+        x = layers.Dropout(0.2)(x)
         output = convolution_block(x, kernel_size=1)
         return output
 
@@ -162,6 +165,7 @@ def DeeplabV3Plus(img_size, num_classes):
         layer.trainable = False
 
     x = resnet50.get_layer("conv4_block6_2_relu").output
+    x = layers.Dropout(0.5)(x)
     x = DilatedSpatialPyramidPooling(x)
 
     input_a = layers.UpSampling2D(
@@ -174,6 +178,7 @@ def DeeplabV3Plus(img_size, num_classes):
     x = layers.Concatenate(axis=-1)([input_a, input_b])
     x = convolution_block(x)
     x = convolution_block(x)
+    x = layers.Dropout(0.2)(x)
     x = layers.UpSampling2D(
         size=(img_size[0] // x.shape[1], img_size[1] // x.shape[2]),
         interpolation="bilinear",

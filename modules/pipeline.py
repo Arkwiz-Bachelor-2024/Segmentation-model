@@ -117,7 +117,7 @@ class Pipeline:
         target_img = tf_image.convert_image_dtype(target_img, "uint8")
 
         # Data augmentation which will be applied diffrently each epoch giving different versions of the images each time.
-        # input_img, target_img = self.__augment_image__(input_img, target_img)
+        input_img, target_img = self.__augment_image__(input_img, target_img)
 
         return input_img, target_img
 
@@ -186,16 +186,16 @@ class Pipeline:
         target_img = tf.image.rot90(target_img, k=k)
 
         # Adjust brightness (photometric transformation)
-        input_img = tf.image.random_brightness(input_img, max_delta=0.2)
+        input_img = tf.image.random_brightness(input_img, max_delta=0.1)
 
         # Adjust contrast (photometric transformation)
-        input_img = tf.image.random_contrast(input_img, lower=0.8, upper=1.2)
+        input_img = tf.image.random_contrast(input_img, lower=0.9, upper=1.1)
 
         # Adjust hue (photometric transformation)
         input_img = tf.image.random_hue(input_img, max_delta=0.1)
 
         # Adjust saturation (photometric transformation)
-        input_img = tf.image.random_saturation(input_img, lower=0.8, upper=1.2)
+        input_img = tf.image.random_saturation(input_img, lower=0.9, upper=1.1)
 
         # Adding Gaussian noise (noise injection)
         noise = tf.random.normal(

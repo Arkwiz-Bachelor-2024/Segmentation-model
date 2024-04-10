@@ -27,4 +27,6 @@ class CustomLearningRateScheduler(keras.callbacks.Callback):
         scheduled_lr = self.schedule(epoch, lr)
         # Set the value back to the optimizer before this epoch starts
         self.model.optimizer.learning_rate = scheduled_lr
-        print(f"\nEpoch {epoch}: Learning rate is {float(np.array(scheduled_lr))}.")
+
+        if epoch > 0:
+            print(f"\nEpoch {epoch}: Learning rate is {float(np.array(scheduled_lr))}.")
