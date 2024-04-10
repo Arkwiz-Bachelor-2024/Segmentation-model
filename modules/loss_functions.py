@@ -14,6 +14,9 @@ def __tversky_index_class__(class_id, y_true, y_pred, alpha, beta, smooth=100):
     # One-hot encode and cast to float32
     y_true = K.cast(K.equal(y_true, class_id), "float32")
 
+    # y_true = K.print_tensor(y_true, message="y_true = ", summarize=-1)
+    # y_pred = K.print_tensor(y_pred, message="y_pred = ", summarize=-1)
+
     true_positives = K.sum(y_true * y_pred)
     false_positives = K.sum((1 - y_true) * y_pred)
     false_negatives = K.sum(y_true * (1 - y_pred))

@@ -6,7 +6,6 @@ Module which offers ways to visualize the datset and the predictions made by the
 import sys
 import os
 
-
 # Imports the root directory to the path in order to import project modules
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
@@ -23,10 +22,10 @@ from matplotlib.colors import ListedColormap
 from modules.pipeline import Pipeline
 from modules.crf import pre_defined_conditional_random_field
 from modules.plot import simple_image_display
-from modules.loss_functions import multi_class_tversky_loss
+from modules.generator import extract_predictions_with_crf
 
 # * Components
-model = keras.models.load_model("./models/10epoch_32b.keras", compile=False)
+model = keras.models.load_model("./models/seg_model_10e_64b+DA", compile=False)
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
@@ -36,6 +35,7 @@ pipeline.set_dataset_from_directory(
 )
 dataset = pipeline.dataset
 
+# * Customization
 colors = [
     (1, 1, 1),
     (1, 0, 0),
@@ -45,36 +45,17 @@ colors = [
 ]  # White, Red, Green, Blue, Gray
 cmap = ListedColormap(colors)
 
+# * Extraction
 # [ 537 1014 1190   71   84 1305 1215   86 1184  547]
-images = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
+image_indices = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
+image_names, images, masks, pred_masks, crf_masks = extract_predictions_with_crf(
+    image_indices, model, pipeline
+)
 
-# * Samples
-
-for i in images:
-
-    image_name = "test"
-    # image_number = 1014
-    # samples = pipeline.get_sample_by_filename(image_name)
-
-    samples = pipeline.get_sample_by_index(i, 1)
-    image = samples[0]
-    mask = samples[1]
-
-    # Predictions
-    print(image.shape)
-    image_with_batch = np.expand_dims(image, axis=0)
-    pred_mask_probs = model.predict(image)
-    image = image.numpy().squeeze()
-
-    # * Masks
-    mask = tf.squeeze(mask)
-    mask = mask.numpy()
-    pred_mask = np.argmax(pred_mask_probs.squeeze(), axis=-1)
-    crf_mask = pre_defined_conditional_random_field(
-        image=image,
-        pred_mask_probs=pred_mask_probs,
-        inference_iterations=3,
-    )
+# * Visualization
+for image_name, image, mask, pred_mask, crf_mask in zip(
+    image_names, images, masks, pred_masks, crf_masks
+):
 
     print("----------------------------------------------------------------------")
     print("Image details(shape, type):")
@@ -121,7 +102,7 @@ for i in images:
 
     plot_images = [image, mask, pred_mask, crf_mask]
     plot_titles = [
-        f"Image\n {image_name or image_number}",
+        f"Image\n {image_name}",
         "Ground truth",
         "Prediction mask",
         "CRF mask",

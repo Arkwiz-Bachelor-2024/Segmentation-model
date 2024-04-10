@@ -5,7 +5,7 @@ from pydensecrf.utils import (
     create_pairwise_bilateral,
     create_pairwise_gaussian,
 )
-from modules.metrics import get_mIOU
+from modules.metrics import get_mIOU, get_OA
 
 
 def pre_defined_conditional_random_field(image, pred_mask_probs, inference_iterations):
@@ -93,12 +93,19 @@ def crf_mask_grid_search(
                 )
                 crf_masks.append(crf_mask)
 
-            # Avg mIOU
-            scores = []
+            # Avg mIOU and OA
+            mIOU_scores = []
+            OA_scores = []
             for mask, crf_mask in zip(masks, crf_masks):
-                scores.append(get_mIOU(mask, crf_mask, 5))
+                mIOU_scores.append(get_mIOU(mask, crf_mask, 5))
+                OA_scores.append(get_OA(mask, crf_mask))
 
-            score = sum(scores) / len(scores)
+            mIoU_score = f"mIoU: {round(sum(mIOU_scores) / len(mIOU_scores), 4)}"
+            OA_score = f"OA: {round(sum(OA_scores) / len(OA_scores), 4)}"
+
+            performance = []
+            performance.append(mIoU_score)
+            performance.append(OA_score)
 
             # Store the parameter set and its score
             results.append(
@@ -109,7 +116,7 @@ def crf_mask_grid_search(
                         "compat_bilateral": compat_bilateral,
                     },
                     "mask": crf_masks[0],
-                    "score": score,
+                    "score": performance,
                 }
             )
 

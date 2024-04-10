@@ -1,6 +1,6 @@
 #!/bin/sh
 #SBATCH --account=share-ie-idi
-#SBATCH --job-name=Deeplabv3Plus_200e_4b_dice+DA
+#SBATCH --job-name=Deeplabv3Plus_100e_4b_Centropy_adaptive_sgd
 
 #SBATCH --time=0-10:00:00         # format: D-HH:MM:SS
 #SBATCH --partition=GPUQ          # Asking for a GPU

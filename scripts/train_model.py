@@ -5,7 +5,6 @@ from datetime import datetime
 # Imports the root directory to the path in order to import project modules
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
-import keras
 
 import numpy as np
 import tensorflow as tf
@@ -14,6 +13,7 @@ from tensorflow import keras
 import modules.model_architectures as model_architectures
 from modules.pipeline import Pipeline
 from modules.loss_functions import multi_class_tversky_loss
+from modules.learning_rate_scheduler import CustomLearningRateScheduler
 
 """
 This script an initiator to train a segmentation model based upon the specified parameters in the script.
@@ -40,10 +40,10 @@ print(
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
 BATCH_SIZE = 12
-EPOCHS = 200
+EPOCHS = 100
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 10
+MAX_NUMBER_SAMPLES = 2
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -53,7 +53,7 @@ training_pipeline.set_dataset_from_directory(
     input_img_dir=training_img_dir,
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
-    per_class_masks=True,
+    # per_class_masks=True,
     # max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 training_dataset = training_pipeline.dataset
@@ -66,7 +66,7 @@ validation_pipeline.set_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
-    per_class_masks=True
+    # per_class_masks=True
     # max_dataset_len=MAX_NUMBER_SAMPLES
 )
 validation_dataset = validation_pipeline.dataset
@@ -81,16 +81,16 @@ with strategy.scope():
         img_size=IMG_SIZE, num_classes=NUM_CLASSES
     )
 
-    # # In order of Background, Building, Woodland, Water, Road
-    # # (FP, FN)
-    weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
-    custom_loss_function = multi_class_tversky_loss(weights)
+    # # # In order of Background, Building, Woodland, Water, Road
+    # # # (FP, FN)
+    # weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
+    # custom_loss_function = multi_class_tversky_loss(weights)
 
     # Callbacks
     early_stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss",
         min_delta=0,
-        patience=10,
+        patience=21,
         verbose=1,
         mode="min",
     )
@@ -131,12 +131,49 @@ with strategy.scope():
         "---------------------------------------------------------------------------------------------------"
     )
 
-    model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=custom_loss_function)
+    LR_SCHEDULE = [
+        # (epoch to start, learning rate) tuples
+        (10, 0.01),
+        (30, 0.001),
+        (50, 0.0001),
+        (70, 0.00001),
+        (90, 0.000001),
+    ]
+
+    def lr_schedule(epoch, lr):
+        """Helper function to retrieve the scheduled learning rate based on epoch."""
+
+        # Linear growth up until first scheduled learning rate.
+        if epoch < LR_SCHEDULE[0][0]:
+            return 0.001 * epoch
+        for i in range(len(LR_SCHEDULE)):
+            if epoch == LR_SCHEDULE[i][0]:
+                return LR_SCHEDULE[i][1]
+        return lr
+
+    # Mini batch - SGD
+    sgd = keras.optimizers.SGD(
+        learning_rate=0.01, momentum=0.9, weight_decay=0.0001, global_clipnorm=0.5
+    )
+
+    model.compile(
+        optimizer=sgd,
+        loss="sparse_categorical_crossentropy",
+        metrics=[
+            "accuracy",
+            keras.metrics.MeanIoU(num_classes=NUM_CLASSES, sparse_y_pred=False),
+        ],
+    )
 
     model.fit(
         training_dataset,
         epochs=EPOCHS,
-        callbacks=[model_checkpoint_callback, tensorboard, early_stopping],
+        callbacks=[
+            model_checkpoint_callback,
+            tensorboard,
+            early_stopping,
+            CustomLearningRateScheduler(lr_schedule),
+        ],
         validation_data=validation_dataset,
         verbose=2,
     )
