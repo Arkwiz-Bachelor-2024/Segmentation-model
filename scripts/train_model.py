@@ -14,7 +14,6 @@ import modules.model_architectures as model_architectures
 from modules.pipeline import Pipeline
 from modules.loss_functions import multi_class_tversky_loss
 from modules.learning_rate_scheduler import CustomLearningRateScheduler
-from modules.metrics import CustomPrecision, CustomRecall
 
 """
 This script an initiator to train a segmentation model based upon the specified parameters in the script.
@@ -131,26 +130,56 @@ with strategy.scope():
     print(
         "---------------------------------------------------------------------------------------------------"
     )
-
     LR_SCHEDULE = [
         # (epoch to start, learning rate) tuples
-        (10, 0.01),
-        (30, 0.001),
-        (50, 0.0001),
-        (70, 0.00001),
-        (90, 0.000001),
+        (1, 0.01),
+        (10, 0.001),
+        (20, 0.0001),
+        (30, 0.00001),
+        (50, 0.000001),
     ]
 
     def lr_schedule(epoch, lr):
-        """Helper function to retrieve the scheduled learning rate based on epoch."""
+        """
+        Helper function to retrieve the scheduled learning rate based on epoch.
 
-        # Linear growth up until first scheduled learning rate.
+        Inspired by: https://keras.io/guides/writing_your_own_callbacks/#learning-rate-scheduling
+
+        """
+        # Linearily growing learing rate up until first scheduled learning rate.
         if epoch < LR_SCHEDULE[0][0]:
-            return 0.001 * epoch
+            return 0.002 * epoch
+
+        # Update from schedule
         for i in range(len(LR_SCHEDULE)):
             if epoch == LR_SCHEDULE[i][0]:
                 return LR_SCHEDULE[i][1]
+
+        # Other epochs
+        if epoch < LR_SCHEDULE[0][0] or epoch > LR_SCHEDULE[-1][0]:
+            return lr
+
         return lr
+
+    # LR_SCHEDULE = [
+    #     # (epoch to start, learning rate) tuples
+    #     (10, 0.01),
+    #     (30, 0.001),
+    #     (50, 0.0001),
+    #     (70, 0.00001),
+    #     (90, 0.000001),
+    # ]
+
+    # def lr_schedule(epoch, lr):
+    #     """Helper function to retrieve the scheduled learning rate based on epoch."""
+
+    #     # Linear growth up until first scheduled learning rate.
+    #     if epoch < LR_SCHEDULE[0][0]:
+    #         return 0.001 * epoch
+    #     for i in range(len(LR_SCHEDULE)):
+    #         if epoch == LR_SCHEDULE[i][0]:
+    #             return LR_SCHEDULE[i][1]
+    #     return lr
 
     # Mini batch - SGD
     sgd = keras.optimizers.SGD(
@@ -170,9 +199,9 @@ with strategy.scope():
         training_dataset,
         epochs=EPOCHS,
         callbacks=[
-            model_checkpoint_callback,
-            tensorboard,
-            early_stopping,
+            # model_checkpoint_callback,
+            # tensorboard,
+            # early_stopping,
             CustomLearningRateScheduler(lr_schedule),
         ],
         validation_data=validation_dataset,

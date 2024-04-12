@@ -30,6 +30,10 @@ def get_OA(ground_truth, predictions):
 
     true_positives = np.sum(ground_truth == predictions)
 
-    overall_accuracy = true_positives / ground_truth.size
+    if isinstance(ground_truth, np.ndarray):
+        overall_accuracy = true_positives / ground_truth.size
+
+    else:
+        overall_accuracy = true_positives / ground_truth.numpy().size
 
     return overall_accuracy

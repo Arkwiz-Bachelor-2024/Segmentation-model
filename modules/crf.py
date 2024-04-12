@@ -79,6 +79,7 @@ def crf_mask_grid_search(
     for sdims in sdims_options:
         print(f"Processing sdims: {sdims}")
         for compats in compats_options:
+            print(f"Processing compats: {compats}")
             compat_gaussian, compat_bilateral = compats
             crf_masks = []  # Store masks generated with the current parameter set
 
@@ -110,12 +111,13 @@ def crf_mask_grid_search(
             # Store the parameter set and its score
             results.append(
                 {
+                    "predicted_image": pred_mask_probs_list[0].argmax(axis=-1),
                     "parameters": {
-                        "sdims": sdims,
-                        "compat_gaussian": compat_gaussian,
-                        "compat_bilateral": compat_bilateral,
+                        "sdims": f"sdims: {sdims}",
+                        "compat_gaussian": f"Gaussian: {compat_gaussian}",
+                        "compat_bilateral": f"Bilateral: {compat_bilateral}",
                     },
-                    "mask": crf_masks[0],
+                    "mask": crf_masks[2],
                     "score": performance,
                 }
             )

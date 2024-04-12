@@ -16,7 +16,7 @@ from modules.plot import plot_confusion_matrix
 from modules.loss_functions import multi_class_tversky_loss
 
 # * Components
-model = keras.models.load_model(f"./models/U_NET_50e_64b+DA", compile=False)
+model = keras.models.load_model(f"./models/10epoch_32b.keras", compile=False)
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
