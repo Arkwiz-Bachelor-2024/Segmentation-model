@@ -22,8 +22,9 @@ def simple_image_display(titles, images, descriptions, color_map):
     num_images = len(images)
     plt.figure(figsize=(15, 8))
 
+    # TODO refactor to be dynamic
     for i in range(num_images):
-        plt.subplot(2, 2, i + 1)
+        plt.subplot(3, 3, i + 1)
         # Shortcut
         if images[i].shape[-1] > 10:
             plt.imshow(images[i], cmap=color_map)

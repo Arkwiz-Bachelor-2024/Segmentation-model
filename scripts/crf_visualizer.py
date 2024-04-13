@@ -16,7 +16,11 @@ from modules.crf import custom_conditional_random_field, crf_mask_grid_search
 from modules.plot import simple_image_display
 
 # * Components
+<<<<<<< HEAD
 model = keras.models.load_model("./models/seg_model_10e_64b_+DA")
+=======
+model = keras.models.load_model("./models/10epoch_32b.keras", compile=False)
+>>>>>>> c541a8674be407055254303d9a815e240b31460b
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
@@ -29,6 +33,7 @@ dataset = pipeline.dataset
 colors = [(1, 1, 1), (1, 0, 0), (0, 1, 0), (0, 0, 1), (0.5, 0.5, 0.5)]
 cmap = ListedColormap(colors)
 
+# even_images_indecies = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
 even_images_indecies = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
 
 images = []
@@ -44,8 +49,8 @@ for image in images:
     pred_mask_probs_list.append(model.predict(image))
 
 # TODO refactor to different sdims for each potential
-sdims_options = [(3, 3), (1, 1), (5, 5)]
-compats_options = [(10, 10)]
+sdims_options = [(2, 2), (1, 1), (3, 3)]
+compats_options = [(5, 5)]
 
 crf_grid_details = crf_mask_grid_search(
     images=images,
@@ -57,17 +62,43 @@ crf_grid_details = crf_mask_grid_search(
 
 crf_grid_masks = [detail["mask"] for detail in crf_grid_details]
 crf_grid_scores = [detail["score"] for detail in crf_grid_details]
-crf_grid_parameters = [detail["parameters"] for detail in crf_grid_details]
 
-print(crf_grid_details)
+crf_grid_parameters = [detail["parameters"] for detail in crf_grid_details]
+crf_grid_sdims = [detail["sdims"] for detail in crf_grid_parameters]
+crf_grid_compat_g = [detail["compat_gaussian"] for detail in crf_grid_parameters]
+crf_grid_compat_b = [detail["compat_bilateral"] for detail in crf_grid_parameters]
+
+crf_titles = []
+for i in range(len(crf_grid_parameters)):
+    title = crf_grid_sdims[i] + " " + crf_grid_compat_g[i] + " " + crf_grid_compat_b[i]
+
+    crf_titles.append(title)
+
+index = 2
+
+crf_grid_masks.append(images[index].numpy().squeeze())
+crf_grid_scores.append(" ")
+crf_titles.append("Preview Image")
+
+crf_grid_masks.append(masks[index].numpy().squeeze())
+crf_grid_scores.append(" ")
+crf_titles.append("Preview Mask")
+
+crf_grid_masks.insert(0, pred_mask_probs_list[index].argmax(axis=-1).squeeze())
+crf_grid_scores.insert(0, " ")
+crf_titles.insert(0, "Prediction")
+
 print(crf_grid_scores)
 print(crf_grid_parameters)
+print(crf_grid_sdims)
+print(crf_grid_compat_g)
+print(crf_grid_compat_b)
+print(crf_titles)
 
-# tests = ["", "", ""]
 
 simple_image_display(
     images=crf_grid_masks,
-    titles=crf_grid_scores,
+    titles=crf_titles,
     descriptions=crf_grid_scores,
     color_map=cmap,
 )

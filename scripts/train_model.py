@@ -40,7 +40,7 @@ print(
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
 BATCH_SIZE = 12
-EPOCHS = 100
+EPOCHS = 200
 
 # * Datasets
 MAX_NUMBER_SAMPLES = 2
@@ -139,8 +139,8 @@ with strategy.scope():
         """
         Helper function to retrieve the scheduled learning rate based on epoch.
 
-        Inspired by: https://keras.io/guides/writing_your_own_callbacks/#learning-rate-scheduling 
-        
+        Inspired by: https://keras.io/guides/writing_your_own_callbacks/#learning-rate-scheduling
+
         """
         # Update from schedule
         for i in range(len(LR_SCHEDULE)):
@@ -149,20 +149,18 @@ with strategy.scope():
 
         # Other epochs
         if epoch < LR_SCHEDULE[0][0] or epoch > LR_SCHEDULE[-1][0]:
-                return lr
+            return lr
 
         return lr
 
-    #* Learning rate parameters
+    # * Learning rate parameters
 
-    initial_lr = 0.0001   # Initial learning rate for warm-up
-    peak_lr = 0.01        # Target learning rate after warm-up
-    warmup_batches = 20   # Number of batches over which to warm up
-    post_warmup_lr = 0.01 # Learning rate after warm-up, before switch
-    switch_epoch = 40     # Epoch to switch from Adam to SGD
-    post_switch_lr = 0.001
+    initial_lr = 0.0001  # Initial learning rate for warm-up
+    peak_lr = 0.01  # Target learning rate after warm-up
+    warmup_batches = 20  # Number of batches over which to warm up
+    switch_epoch = 20  # Epoch to switch from Adam to SGD
 
-    adam = keras.optimizers.Adam(learning_rate=0.01, clipnorm=0.5, weight_decay=1e-4)
+    adam = keras.optimizers.Adam(learning_rate=0.01)
 
     model.compile(
         optimizer=adam,
@@ -180,7 +178,13 @@ with strategy.scope():
             model_checkpoint_callback,
             tensorboard,
             early_stopping,
-            CustomLearningRateScheduler(initial_lr,peak_lr, warmup_batches, post_warmup_lr, switch_epoch, post_switch_lr, schedule=lr_schedule),
+            CustomLearningRateScheduler(
+                initial_lr,
+                peak_lr,
+                warmup_batches,
+                switch_epoch,
+                lr_schedule,
+            ),
         ],
         validation_data=validation_dataset,
         verbose=2,

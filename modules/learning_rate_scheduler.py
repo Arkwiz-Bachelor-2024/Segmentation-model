@@ -21,16 +21,6 @@ class CustomLearningRateScheduler(keras.callbacks.Callback):
         self.steps = steps
         self.current_steps = current_steps
 
-        
-        
-    def on_batch_begin(self, batch, logs=None):
-
-        
-
-
-        return super().on_batch_begin(batch, logs)
-
-
     def on_epoch_end(self, epoch, logs=None):
         if not hasattr(self.model.optimizer, "learning_rate"):
             raise ValueError('Optimizer must have a "learning_rate" attribute.')
@@ -42,7 +32,6 @@ class CustomLearningRateScheduler(keras.callbacks.Callback):
         scheduled_lr = self.schedule(epoch, lr)
         self.model.optimizer.learning_rate = scheduled_lr
 
-        # Check if value is of type float or MirroredVaraible when using multiple GPUs
         if epoch > 0:
             # Check if scheduled_lr is a MirroredVariable and read its value
             if isinstance(scheduled_lr, tf.distribute.DistributedValues):
@@ -53,5 +42,3 @@ class CustomLearningRateScheduler(keras.callbacks.Callback):
                 lr_value = float(scheduled_lr)
 
             print(f"\nEpoch {epoch}: Learning rate is {float(lr_value):.6}.")
-
-
