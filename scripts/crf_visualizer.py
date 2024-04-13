@@ -29,6 +29,7 @@ dataset = pipeline.dataset
 colors = [(1, 1, 1), (1, 0, 0), (0, 1, 0), (0, 0, 1), (0.5, 0.5, 0.5)]
 cmap = ListedColormap(colors)
 
+# even_images_indecies = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
 even_images_indecies = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
 
 images = []
