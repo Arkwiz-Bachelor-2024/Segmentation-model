@@ -13,7 +13,7 @@ from tensorflow import keras
 import modules.model_architectures as model_architectures
 from modules.pipeline import Pipeline
 from modules.loss_functions import multi_class_tversky_loss
-from modules.learning_rate_scheduler import CustomLearningRateScheduler
+from modules.custom_learning_rate import CustomLearningRateScheduler
 
 """
 This script an initiator to train a segmentation model based upon the specified parameters in the script.
@@ -81,16 +81,11 @@ with strategy.scope():
         img_size=IMG_SIZE, num_classes=NUM_CLASSES
     )
 
-    # # # In order of Background, Building, Woodland, Water, Road
-    # # # (FP, FN)
-    # weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
-    # custom_loss_function = multi_class_tversky_loss(weights)
-
     # Callbacks
     early_stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss",
         min_delta=0,
-        patience=21,
+        patience=15,
         verbose=1,
         mode="min",
     )
@@ -131,38 +126,46 @@ with strategy.scope():
         "---------------------------------------------------------------------------------------------------"
     )
 
+
     LR_SCHEDULE = [
         # (epoch to start, learning rate) tuples
-        (10, 0.01),
-        (30, 0.001),
-        (50, 0.0001),
-        (70, 0.00001),
-        (90, 0.000001),
+        (1, 0.01),
+        (80, 0.001),
+        (120, 0.0001),
+        (160, 0.00001),
     ]
 
     def lr_schedule(epoch, lr):
-        """Helper function to retrieve the scheduled learning rate based on epoch."""
+        """
+        Helper function to retrieve the scheduled learning rate based on epoch.
 
-        # Linear growth up until first scheduled learning rate.
-        if epoch <= 10:
-            return 0.003 * epoch 
-
-        if epoch < LR_SCHEDULE[0][0] or epoch > LR_SCHEDULE[-1][0]:
-                return lr
-
+        Inspired by: https://keras.io/guides/writing_your_own_callbacks/#learning-rate-scheduling 
+        
+        """
+        # Update from schedule
         for i in range(len(LR_SCHEDULE)):
             if epoch == LR_SCHEDULE[i][0]:
                 return LR_SCHEDULE[i][1]
 
+        # Other epochs
+        if epoch < LR_SCHEDULE[0][0] or epoch > LR_SCHEDULE[-1][0]:
+                return lr
+
         return lr
 
-    # Mini batch - SGD
-    sgd = keras.optimizers.SGD(
-        learning_rate=0.01, momentum=0.9, weight_decay=0.0001, global_clipnorm=0.5
-    )
+    #* Learning rate parameters
+
+    initial_lr = 0.0001   # Initial learning rate for warm-up
+    peak_lr = 0.01        # Target learning rate after warm-up
+    warmup_batches = 20   # Number of batches over which to warm up
+    post_warmup_lr = 0.01 # Learning rate after warm-up, before switch
+    switch_epoch = 40     # Epoch to switch from Adam to SGD
+    post_switch_lr = 0.001
+
+    adam = keras.optimizers.Adam(learning_rate=0.01, clipnorm=0.5, weight_decay=1e-4)
 
     model.compile(
-        optimizer=sgd,
+        optimizer=adam,
         loss="sparse_categorical_crossentropy",
         metrics=[
             "accuracy",
@@ -177,7 +180,7 @@ with strategy.scope():
             model_checkpoint_callback,
             tensorboard,
             early_stopping,
-            CustomLearningRateScheduler(lr_schedule),
+            CustomLearningRateScheduler(initial_lr,peak_lr, warmup_batches, post_warmup_lr, switch_epoch, post_switch_lr, schedule=lr_schedule),
         ],
         validation_data=validation_dataset,
         verbose=2,
