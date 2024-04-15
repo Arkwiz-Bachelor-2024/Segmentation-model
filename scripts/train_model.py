@@ -126,43 +126,29 @@ with strategy.scope():
         "---------------------------------------------------------------------------------------------------"
     )
 
-    LR_SCHEDULE = [
-        # (epoch to start, learning rate) tuples
-        (1, 0.01),
-        (80, 0.001),
-        (120, 0.0001),
-        (160, 0.00001),
-    ]
-
-    def lr_schedule(epoch, lr):
+    def lr_schedule(epoch, lr, base_lr, max_epochs):
         """
-        Helper function to retrieve the scheduled learning rate based on epoch.
+        Helper function to schedule learning rate
 
         Inspired by: https://keras.io/guides/writing_your_own_callbacks/#learning-rate-scheduling
 
         """
-        # Update from schedule
-        for i in range(len(LR_SCHEDULE)):
-            if epoch == LR_SCHEDULE[i][0]:
-                return LR_SCHEDULE[i][1]
 
-        # Other epochs
-        if epoch < LR_SCHEDULE[0][0] or epoch > LR_SCHEDULE[-1][0]:
-            return lr
-
-        return lr
+        # Polynomial decay - ParseNet approach
+        return base_lr * (1 - epoch / max_epochs) ** 0.9
 
     # * Learning rate parameters
 
-    initial_lr = 0.0001  # Initial learning rate for warm-up
-    peak_lr = 0.01  # Target learning rate after warm-up
+    base_lr = 0.05  # Target learning rate after warm-up
+    initial_lr = 0.0003  # Initial learning rate during warm-up
     warmup_batches = 10  # Number of batches over which to warm up
-    switch_epoch = 10  # Epoch to switch from Adam to SGD
 
-    adam = keras.optimizers.Adam(learning_rate=0.01)
+    sgd = keras.optimizers.SGD(
+        learning_rate=base_lr, weight_decay=0.0005, momentum=0.9, nesterov=True
+    )
 
     model.compile(
-        optimizer=adam,
+        optimizer=sgd,
         loss="sparse_categorical_crossentropy",
         metrics=[
             "accuracy",
@@ -178,10 +164,10 @@ with strategy.scope():
             tensorboard,
             early_stopping,
             CustomLearningRateScheduler(
+                base_lr,
                 initial_lr,
-                peak_lr,
                 warmup_batches,
-                switch_epoch,
+                EPOCHS,
                 lr_schedule,
             ),
         ],

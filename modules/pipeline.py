@@ -38,7 +38,7 @@ class Pipeline:
         index_within_batch = sample_index % batch_size
 
         # Extract the batch
-        for image, mask in self.dataset.skip(batch_index).take(1):
+        for image, mask in self.dataset.skip(batch_index).take(index_within_batch):
             image = image
             mask = mask
 
@@ -117,7 +117,7 @@ class Pipeline:
         target_img = tf_image.convert_image_dtype(target_img, "uint8")
 
         # Data augmentation which will be applied diffrently each epoch giving different versions of the images each time.
-        # input_img, target_img = self.__augment_image__(input_img, target_img)
+        input_img, target_img = self.__augment_image__(input_img, target_img)
 
         return input_img, target_img
 
@@ -192,7 +192,7 @@ class Pipeline:
         input_img = tf.image.random_contrast(input_img, lower=0.8, upper=1.2)
 
         # Adjust hue (photometric transformation)
-        input_img = tf.image.random_hue(input_img, max_delta=0.1)
+        input_img = tf.image.random_hue(input_img, max_delta=0.2)
 
         # Adjust saturation (photometric transformation)
         input_img = tf.image.random_saturation(input_img, lower=0.8, upper=1.2)

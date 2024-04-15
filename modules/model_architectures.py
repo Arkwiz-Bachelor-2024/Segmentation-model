@@ -183,12 +183,12 @@ def DeeplabV3Plus(img_size, num_classes):
         size=(img_size[0] // 4 // x.shape[1], img_size[1] // 4 // x.shape[2]),
         interpolation="bilinear",
     )(x)
-    input_b = resnet50.get_layer("conv2_block3_2_out").output
+    input_b = resnet50.get_layer("conv2_block3_out").output
     input_b = convolution_block(input_b, num_filters=48, kernel_size=1)
 
     x = layers.Concatenate(axis=-1)([input_a, input_b])
 
-    # Regular convulutions on global context from ASPP and low-level features
+    # Regular convolutions on global context from ASPP and low-level(early) features
     x = convolution_block(x)
     x = convolution_block(x)
 

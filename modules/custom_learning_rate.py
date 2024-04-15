@@ -4,24 +4,24 @@ import tensorflow as tf
 class CustomLearningRateScheduler(tf.keras.callbacks.Callback):
     def __init__(
         self,
+        base_lr,
         initial_lr,
-        peak_lr,
         warmup_batches,
-        switch_epoch,
+        max_epochs,
         schedule,
     ):
+        self.base_lr = base_lr
         self.initial_lr = initial_lr
-        self.peak_lr = peak_lr
         self.warmup_batches = warmup_batches
-        self.batch_count = 0
-        self.switch_epoch = switch_epoch
-        self.switched = False
+        self.max_epochs = max_epochs
         self.schedule = schedule
+        self.batch_count = 0
 
     def on_batch_begin(self, batch, logs=None):
 
-        if self.batch_count <= self.warmup_batches:  # Warm-up phase
-            lr = self.initial_lr + (self.peak_lr - self.initial_lr) * (
+        # Warmup learning rate schedule
+        if self.batch_count <= self.warmup_batches:
+            lr = self.initial_lr + (self.base_lr - self.initial_lr) * (
                 self.batch_count / self.warmup_batches
             )
             self.model.optimizer.learning_rate = lr
@@ -29,19 +29,12 @@ class CustomLearningRateScheduler(tf.keras.callbacks.Callback):
         self.batch_count += 1
 
     def on_epoch_end(self, epoch, logs=None):
+
         # Get the current learning rate from model's optimizer.
         lr = self.model.optimizer.learning_rate
 
-        # Swtich to SGD
-        if epoch >= self.switch_epoch and not self.switched:
-            self.model.optimizer = tf.keras.optimizers.SGD(
-                learning_rate=lr, weight_decay=0.0001, clipnorm=0.5, momentum=0.9
-            )
-            self.switched = True
-            print(f"Switched to SGD at epoch {epoch}")
-
         # Call schedule function to get the scheduled learning rate.
-        scheduled_lr = self.schedule(epoch, lr)
+        scheduled_lr = self.schedule(epoch, lr, self.base_lr, self.max_epochs)
         self.model.optimizer.learning_rate = scheduled_lr
 
         # Check if value is of type float or MirroredVaraible when using multiple GPUs
