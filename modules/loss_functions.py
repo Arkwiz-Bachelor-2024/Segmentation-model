@@ -1,5 +1,4 @@
 from keras import backend as K
-import pdb
 
 """
 Module containing custom loss functions used with Keras API.
@@ -7,7 +6,7 @@ Module containing custom loss functions used with Keras API.
 
 
 # Smooth is added to avoid dividing by 1
-def __tversky_index_class__(class_id, y_true, y_pred, alpha, beta, smooth=1e-6):
+def __tversky_index_class__(class_id, y_true, y_pred, alpha, beta, smooth=100):
     """
     Calculates the tvernsky index for a given class id.
     """
@@ -21,9 +20,9 @@ def __tversky_index_class__(class_id, y_true, y_pred, alpha, beta, smooth=1e-6):
     true_positives = K.sum(y_true * y_pred)
     false_positives = K.sum((1 - y_true) * y_pred)
     false_negatives = K.sum(y_true * (1 - y_pred))
-
-    return (true_positives + smooth) / (
-        true_positives + alpha * false_positives + beta * false_negatives + smooth
+    return (
+        2 * (true_positives + smooth)
+        / (true_positives + alpha * false_positives + beta * false_negatives + smooth)
     )
 
 

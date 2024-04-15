@@ -38,8 +38,8 @@ print(
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 1
-EPOCHS = 100
+BATCH_SIZE = 12
+EPOCHS = 200
 
 # * Datasets
 MAX_NUMBER_SAMPLES = 2
@@ -53,7 +53,7 @@ training_pipeline.set_dataset_from_directory(
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
     # per_class_masks=True,
-    max_dataset_len=MAX_NUMBER_SAMPLES,
+    # max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 training_dataset = training_pipeline.dataset
 
@@ -65,8 +65,8 @@ validation_pipeline.set_dataset_from_directory(
     batch_size=BATCH_SIZE,
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
-    # per_class_masks=True,
-    max_dataset_len=MAX_NUMBER_SAMPLES,
+    # per_class_masks=True
+    # max_dataset_len=MAX_NUMBER_SAMPLES
 )
 validation_dataset = validation_pipeline.dataset
 
@@ -80,12 +80,11 @@ with strategy.scope():
         img_size=IMG_SIZE, num_classes=NUM_CLASSES
     )
 
-    model.summary()
     # Callbacks
     early_stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss",
         min_delta=0,
-        patience=21,
+        patience=15,
         verbose=1,
         mode="min",
     )
@@ -108,7 +107,7 @@ with strategy.scope():
         "---------------------------------------------------------------------------------------------------"
     )
     print("Classes: ", NUM_CLASSES)
-    print("Batch size:", BATCH_SIZE)
+    print("Total batch size:", BATCH_SIZE)
     print("Epochs", EPOCHS)
     print(
         "---------------------------------------------------------------------------------------------------"

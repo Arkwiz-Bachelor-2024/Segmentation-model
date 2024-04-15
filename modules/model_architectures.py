@@ -1,5 +1,5 @@
 from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow.keras import layers 
 import numpy as np
 
 """
@@ -40,6 +40,8 @@ def UNET_model(img_size, num_classes):
         )
         x = layers.add([x, residual])  # Add back residual
         previous_block_activation = x  # Set aside next residual
+
+    x = layers.Dropout(0.2)(x)
 
     ### [Second half of the network: upsampling inputs] ###
 
@@ -116,7 +118,7 @@ def ResNet_model(img_size, num_classes):
 def DeeplabV3Plus(img_size, num_classes):
 
     def convolution_block(
-        block_input, num_filters=256, kernel_size=3, dilation_rate=1, use_bias=False
+        block_input, num_filters=64, kernel_size=3, dilation_rate=1, use_bias=False
     ):
         x = layers.Conv2D(
             num_filters,

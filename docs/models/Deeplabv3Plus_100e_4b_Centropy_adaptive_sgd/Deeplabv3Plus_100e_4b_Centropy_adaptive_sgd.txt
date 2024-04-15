@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> 101981abb2f0bb6f8c2a3f2a91f5211f8b999411
 We are running from this directory: /cluster/work/petteed/seg_model/Segmentation-model
 ---------------------------------------------------------
 The name of the job is: Deeplabv3Plus_100e_4b_Centropy_adaptive_sgd

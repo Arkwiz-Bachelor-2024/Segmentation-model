@@ -15,9 +15,11 @@ class CustomLearningRateScheduler(keras.callbacks.Callback):
     Extracted from: https://keras.io/api/callbacks/learning_rate_scheduler/
     """
 
-    def __init__(self, schedule):
+    def __init__(self, schedule, steps):
         super().__init__()
         self.schedule = schedule
+        self.steps = steps
+        self.current_steps = current_steps
 
     def on_epoch_end(self, epoch, logs=None):
         if not hasattr(self.model.optimizer, "learning_rate"):
@@ -25,9 +27,9 @@ class CustomLearningRateScheduler(keras.callbacks.Callback):
 
         # Get the current learning rate from model's optimizer.
         lr = self.model.optimizer.learning_rate
+
         # Call schedule function to get the scheduled learning rate.
         scheduled_lr = self.schedule(epoch, lr)
-        # Set the value back to the optimizer before this epoch starts
         self.model.optimizer.learning_rate = scheduled_lr
 
         if epoch > 0:
