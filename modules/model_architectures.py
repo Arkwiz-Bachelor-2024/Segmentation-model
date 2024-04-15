@@ -124,6 +124,7 @@ def DeeplabV3Plus(img_size, num_classes):
             dilation_rate=dilation_rate,
             padding="same",
             use_bias=use_bias,
+            # Normal distribution initializer apparently
             kernel_initializer=keras.initializers.HeNormal(),
         )(block_input)
         x = layers.BatchNormalization()(x)
@@ -157,23 +158,40 @@ def DeeplabV3Plus(img_size, num_classes):
     resnet50 = keras.applications.ResNet50(
         weights="imagenet", include_top=False, input_tensor=preprocessed
     )
-    # Freeze the layers
+
+    # Freeze the layers up until conv block 3
     for layer in resnet50.layers:
+
+        if layer.name == "conv_3_block_4_out":
+            break
         layer.trainable = False
 
-    x = resnet50.get_layer("conv4_block6_2_relu").output
+    # Change output to 3rd convultional block
+    x = resnet50.get_layer("conv3_block4_out").output
+
+    # Applying dilated convolutions on the custom conv4_x with dilation rate of 2
+    x = convolution_block(x, num_filters=256, kernel_size=1, dilation_rate=2)
+
+    # Applying dilated convolutions on conv5_x with a higher dilation rate
+    # Ultimately landing on a OS of 4 with 128 feature maps
+    x = convolution_block(x, num_filters=128, kernel_size=1, dilation_rate=4)
+
+    # ASPP pyramid
     x = DilatedSpatialPyramidPooling(x)
 
     input_a = layers.UpSampling2D(
         size=(img_size[0] // 4 // x.shape[1], img_size[1] // 4 // x.shape[2]),
         interpolation="bilinear",
     )(x)
-    input_b = resnet50.get_layer("conv2_block3_2_relu").output
+    input_b = resnet50.get_layer("conv2_block3_2_out").output
     input_b = convolution_block(input_b, num_filters=48, kernel_size=1)
 
     x = layers.Concatenate(axis=-1)([input_a, input_b])
+
+    # Regular convulutions on global context from ASPP and low-level features
     x = convolution_block(x)
     x = convolution_block(x)
+
     x = layers.UpSampling2D(
         size=(img_size[0] // x.shape[1], img_size[1] // x.shape[2]),
         interpolation="bilinear",

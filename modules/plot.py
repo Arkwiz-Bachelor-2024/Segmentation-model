@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 
 def simple_image_display(titles, images, descriptions, color_map):
@@ -22,9 +23,10 @@ def simple_image_display(titles, images, descriptions, color_map):
     num_images = len(images)
     plt.figure(figsize=(15, 8))
 
-    # TODO refactor to be dynamic
+    # Calculate the grid scale based on the number of images.
+    grid_scale = math.ceil(math.sqrt(num_images))
     for i in range(num_images):
-        plt.subplot(3, 3, i + 1)
+        plt.subplot(grid_scale, grid_scale, i + 1)
         # Shortcut
         if images[i].shape[-1] > 10:
             plt.imshow(images[i], cmap=color_map)

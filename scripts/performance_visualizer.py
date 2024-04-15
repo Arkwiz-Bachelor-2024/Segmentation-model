@@ -25,7 +25,9 @@ from modules.plot import simple_image_display
 from modules.generator import extract_predictions_with_crf
 
 # * Components
-model = keras.models.load_model("./models/10epoch_32b.keras", compile=False)
+model = keras.models.load_model(
+    "./models/Deeplabv3Plus_100e_4b_Centropy_adaptive_sgd+DA+DO", compile=False
+)
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,

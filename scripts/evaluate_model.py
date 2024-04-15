@@ -30,6 +30,7 @@ raw_masks = np.argmax(pred_masks_probs, axis=-1)
 
 NUM_CLASSES = 5
 # Initialize the MeanIoU metric
+# TODO implement OA metric
 raw_miou_metric = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
 crf_miou_metric = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
 

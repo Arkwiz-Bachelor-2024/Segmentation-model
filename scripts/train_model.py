@@ -12,7 +12,6 @@ from tensorflow import keras
 
 import modules.model_architectures as model_architectures
 from modules.pipeline import Pipeline
-from modules.loss_functions import multi_class_tversky_loss
 from modules.custom_learning_rate import CustomLearningRateScheduler
 
 """
@@ -81,11 +80,7 @@ with strategy.scope():
         img_size=IMG_SIZE, num_classes=NUM_CLASSES
     )
 
-    # # # In order of Background, Building, Woodland, Water, Road
-    # # # (FP, FN)
-    # weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
-    # custom_loss_function = multi_class_tversky_loss(weights)
-
+    model.summary()
     # Callbacks
     early_stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss",
