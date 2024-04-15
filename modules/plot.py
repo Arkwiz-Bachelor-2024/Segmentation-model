@@ -32,22 +32,25 @@ def simple_image_display(titles, images, descriptions, color_map):
             plt.imshow(images[i], cmap=color_map)
         else:
             plt.imshow(images[i])
-        plt.title(titles[i])
+
+        if titles != None:
+            plt.title(titles[i])
         plt.axis("off")
 
-        # Join the array of details into a single string with line breaks.
-        description_text = "\n".join(descriptions[i])
+        if descriptions != None:
+            # Join the array of details into a single string with line breaks.
+            description_text = "\n".join(descriptions[i])
 
-        # Adding the description text below the image
-        plt.text(
-            0.5,
-            -0.1,
-            description_text,
-            transform=plt.gca().transAxes,
-            ha="center",
-            va="top",
-            fontsize=8,
-        )
+            # Adding the description text below the image
+            plt.text(
+                0.5,
+                -0.1,
+                description_text,
+                transform=plt.gca().transAxes,
+                ha="center",
+                va="top",
+                fontsize=8,
+            )
 
     plt.tight_layout()
     plt.show()

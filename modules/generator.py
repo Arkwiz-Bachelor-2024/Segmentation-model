@@ -12,7 +12,28 @@ import matplotlib.pyplot as plt
 from modules.crf import pre_defined_conditional_random_field
 
 
-def extract_predictions_with_crf(image_indices, model, pipeline):
+def extract_predictions(images, model):
+    """
+    This function extracts specific images and predictions based on the provided images and model.
+
+    """
+
+    pred_masks = []
+
+    for image in images:
+
+        # Prediction
+        image = np.expand_dims(image, axis=0)
+        pred_mask_probs = model.predict(image)
+        pred_mask = np.argmax(pred_mask_probs.squeeze(), axis=-1)
+
+        # Collection
+        pred_masks.append(pred_mask)
+
+    return pred_masks
+
+
+def extract_predictions_and_descriptions_with_crf(image_indices, model, pipeline):
     """
     This function extracts specific images, masks, predictions and CRF masks based on the provided indicies, model and dataset.
 
