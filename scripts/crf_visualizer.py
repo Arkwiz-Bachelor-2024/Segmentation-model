@@ -16,11 +16,7 @@ from modules.crf import custom_conditional_random_field, crf_mask_grid_search
 from modules.plot import simple_image_display
 
 # * Components
-<<<<<<< HEAD
 model = keras.models.load_model("./models/seg_model_10e_64b_+DA")
-=======
-model = keras.models.load_model("./models/10epoch_32b.keras", compile=False)
->>>>>>> c541a8674be407055254303d9a815e240b31460b
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
