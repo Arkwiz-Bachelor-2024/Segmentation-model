@@ -138,9 +138,11 @@ with strategy.scope():
 
     # * Learning rate parameters
 
-    base_lr = 0.05  # Target learning rate after warm-up
+    base_lr = 0.03  # Target learning rate after warm-up
     initial_lr = 0.0003  # Initial learning rate during warm-up
     warmup_batches = 10  # Number of batches over which to warm up
+
+    milestones = [10, 30, 50]  # Epochs at which to decrease learning rate
 
     sgd = keras.optimizers.SGD(
         learning_rate=base_lr, weight_decay=0.0005, momentum=0.9, nesterov=True
@@ -163,11 +165,7 @@ with strategy.scope():
             tensorboard,
             early_stopping,
             CustomLearningRateScheduler(
-                base_lr,
-                initial_lr,
-                warmup_batches,
-                EPOCHS,
-                lr_schedule,
+                base_lr, initial_lr, warmup_batches, EPOCHS, lr_schedule, milestones
             ),
         ],
         validation_data=validation_dataset,

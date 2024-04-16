@@ -9,6 +9,7 @@ class CustomLearningRateScheduler(tf.keras.callbacks.Callback):
         warmup_batches,
         max_epochs,
         schedule,
+        milestones=None,
     ):
         self.base_lr = base_lr
         self.initial_lr = initial_lr
@@ -16,6 +17,7 @@ class CustomLearningRateScheduler(tf.keras.callbacks.Callback):
         self.max_epochs = max_epochs
         self.schedule = schedule
         self.batch_count = 0
+        self.milestones = milestones
 
     def on_batch_begin(self, batch, logs=None):
 
@@ -32,6 +34,11 @@ class CustomLearningRateScheduler(tf.keras.callbacks.Callback):
 
         # Get the current learning rate from model's optimizer.
         lr = self.model.optimizer.learning_rate
+
+        for milestone in self.milestones:
+            if epoch == milestone:
+                # Decrease learning rate by a factor of 10
+                self.base_lr = self.base_lr / 10
 
         # Call schedule function to get the scheduled learning rate.
         scheduled_lr = self.schedule(epoch, lr, self.base_lr, self.max_epochs)
