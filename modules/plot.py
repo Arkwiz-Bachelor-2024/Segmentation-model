@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 
-def simple_image_display(titles, images, descriptions, color_map):
+def simple_image_display(titles=None, images=None, descriptions=None, color_map=None):
     """
     displays images with their individual titles and array of descriptions.
 
@@ -12,13 +12,13 @@ def simple_image_display(titles, images, descriptions, color_map):
     - images: list of ndarray, image data in a format compatible with plt.imshow.
     - descriptions: list of list of str, each list contains parts of the description for each image.
     """
-    if not images or not descriptions or not titles:
-        raise ValueError("titles, images, and descriptions must be non-empty lists.")
+    # if not images or not descriptions or not titles:
+    #     raise ValueError("titles, images, and descriptions must be non-empty lists.")
 
-    if len(images) != len(descriptions) or len(images) != len(titles):
-        raise ValueError(
-            "titles, images, and descriptions must be lists of the same length."
-        )
+    # if len(images) != len(descriptions) or len(images) != len(titles):
+    #     raise ValueError(
+    #         "titles, images, and descriptions must be lists of the same length."
+    #     )
 
     num_images = len(images)
     plt.figure(figsize=(15, 8))

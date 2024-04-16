@@ -8,8 +8,27 @@ sys.path.insert(0, project_root)
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from PIL import Image
 
 from modules.crf import pre_defined_conditional_random_field
+
+
+def load_images_from_folder(folder):
+    """
+    Loads images from a directory into a list of PIL Image objects.
+    """
+    images = []
+    for filename in os.listdir(folder):
+        img_path = os.path.join(folder, filename)
+        try:
+            with Image.open(img_path) as img:
+                images.append(
+                    img.copy()
+                )  # Use img.copy() if you plan to close the image
+        except IOError:
+            # You can skip files that aren't images
+            print(f"Failed to load {filename}")
+    return images
 
 
 def extract_predictions(images, model):
@@ -74,7 +93,7 @@ def extract_predictions_and_descriptions_with_crf(image_indices, model, pipeline
     return image_names, images, masks, pred_masks, crf_masks
 
 
-def extract_predictions(image_indices, model, pipeline):
+def extract_predictions_samples(image_indices, model, pipeline):
     """
     This function extracts specific images, masks and predictions based on the provided indicies, model and dataset.
 

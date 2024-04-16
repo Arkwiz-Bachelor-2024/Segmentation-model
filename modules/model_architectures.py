@@ -115,10 +115,12 @@ def ResNet_model(img_size, num_classes):
     return model
 
 
+# TODO OS4,multi-grid(1,2,1), Xception, freeze batch norm layers, unfreeze encoder,
+# tvernsky loss, crop size, multi-scaling, FCRF?, DPC?
 def DeeplabV3Plus(img_size, num_classes):
 
     def convolution_block(
-        block_input, num_filters=64, kernel_size=3, dilation_rate=1, use_bias=False
+        block_input, num_filters=256, kernel_size=3, dilation_rate=1, use_bias=False
     ):
         x = layers.Conv2D(
             num_filters,
@@ -161,26 +163,26 @@ def DeeplabV3Plus(img_size, num_classes):
         weights="imagenet", include_top=False, input_tensor=preprocessed
     )
 
-    # Freeze the layers up until conv block 3
+    # Freeze the layers up until conv block 2
     for layer in resnet50.layers:
 
-        if layer.name == "conv_3_block_4_out":
+        if layer.name == "conv_2_block_3_out":
             break
         layer.trainable = False
 
-    # Change output to 3rd convultional block
-    x = resnet50.get_layer("conv3_block4_out").output
+    # Make the output to 2nd convultional block
+    x = resnet50.get_layer("conv2_block3_out").output
 
-    # Applying dilated convolutions on the custom conv4_x with dilation rate of 2
-    x = convolution_block(x, num_filters=256, kernel_size=1, dilation_rate=2)
-
-    # Applying dilated convolutions on conv5_x with a higher dilation rate
-    # Ultimately landing on a OS of 4 with 128 feature maps
-    x = convolution_block(x, num_filters=128, kernel_size=1, dilation_rate=4)
+    # Change to OS4 with multi-grid approach of (1,2,1)
+    # Stride is implicitly set to 1
+    x = convolution_block(x, num_filters=256, dilation_rate=2)
+    x = convolution_block(x, num_filters=512, dilation_rate=4)
+    x = convolution_block(x, num_filters=1024, dilation_rate=2)
 
     # ASPP pyramid
     x = DilatedSpatialPyramidPooling(x)
 
+    # 4x upsampling
     input_a = layers.UpSampling2D(
         size=(img_size[0] // 4 // x.shape[1], img_size[1] // 4 // x.shape[2]),
         interpolation="bilinear",
@@ -188,12 +190,15 @@ def DeeplabV3Plus(img_size, num_classes):
     input_b = resnet50.get_layer("conv2_block3_out").output
     input_b = convolution_block(input_b, num_filters=48, kernel_size=1)
 
+    # Concatenate the low-level features with the high-level features
     x = layers.Concatenate(axis=-1)([input_a, input_b])
 
     # Regular convolutions on global context from ASPP and low-level(early) features
+    # 2 * 3x3 convolutions
     x = convolution_block(x)
     x = convolution_block(x)
 
+    # 4x upsampling
     x = layers.UpSampling2D(
         size=(img_size[0] // x.shape[1], img_size[1] // x.shape[2]),
         interpolation="bilinear",

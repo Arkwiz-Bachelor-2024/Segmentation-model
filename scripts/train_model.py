@@ -38,7 +38,7 @@ print(
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 12
+BATCH_SIZE = 1
 EPOCHS = 200
 
 # * Datasets
@@ -53,7 +53,7 @@ training_pipeline.set_dataset_from_directory(
     target_img_dir=training_mask_dir,
     batch_size=BATCH_SIZE,
     # per_class_masks=True,
-    # max_dataset_len=MAX_NUMBER_SAMPLES,
+    max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 training_dataset = training_pipeline.dataset
 
@@ -66,7 +66,7 @@ validation_pipeline.set_dataset_from_directory(
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
     # per_class_masks=True
-    # max_dataset_len=MAX_NUMBER_SAMPLES
+    max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 validation_dataset = validation_pipeline.dataset
 
@@ -139,10 +139,10 @@ with strategy.scope():
     # * Learning rate parameters
 
     base_lr = 0.03  # Target learning rate after warm-up
-    initial_lr = 0.0003  # Initial learning rate during warm-up
+    initial_lr = 0.0001  # Initial learning rate during warm-up
     warmup_batches = 10  # Number of batches over which to warm up
 
-    milestones = [10, 30, 50]  # Epochs at which to decrease learning rate
+    milestones = [20, 30, 50]  # Epochs at which to decrease learning rate
 
     sgd = keras.optimizers.SGD(
         learning_rate=base_lr, weight_decay=0.0005, momentum=0.9, nesterov=True
