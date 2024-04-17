@@ -22,11 +22,12 @@ from matplotlib.colors import ListedColormap
 from modules.pipeline import Pipeline
 from modules.crf import pre_defined_conditional_random_field
 from modules.plot import simple_image_display
-from modules.generator import extract_predictions_with_crf
+from modules.generator import extract_predictions_crf
 
 # * Components
 model = keras.models.load_model(
-    "./models/Deeplabv3Plus_100e_4b_Centropy_adaptive_sgd+DA+DO", compile=False
+    "./models/Deeplabv3Plus_50e_32b_Centropy_SGD_warmup+DO_mild+DA_mild",
+    compile=False,
 )
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
@@ -50,7 +51,8 @@ cmap = ListedColormap(colors)
 # * Extraction
 # [ 537 1014 1190   71   84 1305 1215   86 1184  547]
 image_indices = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
-image_names, images, masks, pred_masks, crf_masks = extract_predictions_with_crf(
+# images__
+image_names, images, masks, pred_masks, crf_masks = extract_predictions_crf(
     image_indices, model, pipeline
 )
 

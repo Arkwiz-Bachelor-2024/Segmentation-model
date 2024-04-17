@@ -52,7 +52,7 @@ def extract_predictions(images, model):
     return pred_masks
 
 
-def extract_predictions_and_descriptions_with_crf(image_indices, model, pipeline):
+def extract_predictions_crf(image_indices, model, pipeline):
     """
     This function extracts specific images, masks, predictions and CRF masks based on the provided indicies, model and dataset.
 

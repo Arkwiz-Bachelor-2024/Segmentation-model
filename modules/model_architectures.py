@@ -116,7 +116,7 @@ def ResNet_model(img_size, num_classes):
 
 
 # TODO OS4,multi-grid(1,2,1), Xception, freeze batch norm layers, unfreeze encoder,
-# tvernsky loss, crop size, multi-scaling, FCRF?, DPC?
+# TODO tvernsky loss, crop size, multi-scaling, FCRF?, DPC?
 def DeeplabV3Plus(img_size, num_classes):
 
     def convolution_block(
@@ -179,6 +179,9 @@ def DeeplabV3Plus(img_size, num_classes):
     x = convolution_block(x, num_filters=512, dilation_rate=4)
     x = convolution_block(x, num_filters=1024, dilation_rate=2)
 
+    # Dropout features from encoder
+    x = layers.Dropout(0.3)(x)
+
     # ASPP pyramid
     x = DilatedSpatialPyramidPooling(x)
 
@@ -192,6 +195,9 @@ def DeeplabV3Plus(img_size, num_classes):
 
     # Concatenate the low-level features with the high-level features
     x = layers.Concatenate(axis=-1)([input_a, input_b])
+
+    # Dropout of features from encoder and global context
+    x = layers.Dropout(0.3)(x)
 
     # Regular convolutions on global context from ASPP and low-level(early) features
     # 2 * 3x3 convolutions
