@@ -152,19 +152,15 @@ with strategy.scope():
     # Weights for the Tversky loss function
     # Format: (FP, FN) for each class
     # e.g [Background, Buildings, Trees, Water, Road]
-    tversnky_weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
-    # Penalizes over segmentation of background
-    # Penalizes under segmentation of others
+    # Weights decide how much the model should penalize false positives and false negatives
+    tversnky_weights = [(2, 1), (1, 2), (1, 1), (1, 1), (1, 1)]
+    # Penalizes over segmentation of background and under segmentation of buildings
 
-    # Weights for the focal cross entropy loss function
-    # Format: (alpha, gamma) for each class
-    # alpha: Weight for class
-    # gamma: Impact of rare cases
+    # Weights for the cross entropy loss function
     # e.g [Background, Buildings, Trees, Water, Road]
+    # Weights decide how much the model should penalize false positives and false negatives
     binary_cross_entropy_weights = [0.6, 1, 0.8, 1, 1]
-    # Rare cases of buildings are penalized more
-    # Background holds less weight
-    # Trees are penalized but not as much as background
+    # Background and trees are weighted less as they are the dominat classes
 
     loss = multi_class_loss(tversnky_weights, binary_cross_entropy_weights, DEBUG=True)
 
