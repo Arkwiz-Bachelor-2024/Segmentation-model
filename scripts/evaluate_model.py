@@ -13,7 +13,7 @@ from sklearn.metrics import confusion_matrix
 from modules.pipeline import Pipeline
 from modules.crf import pre_defined_conditional_random_field
 from modules.plot import plot_confusion_matrix
-from modules.loss_functions import multi_class_tversky_loss
+from modules.loss_functions import multi_class_loss
 
 # * Components
 model = keras.models.load_model(f"./models/10epoch_32b.keras", compile=False)

@@ -145,13 +145,13 @@ class Pipeline:
         target_img = tf_image.convert_image_dtype(target_img, "uint8")
 
         num_classes = 5
-        # Assuming your mask labels are in 0 to num_classes-1 range after resizing
-        target_img = tf.cast(
-            target_img * (num_classes - 1), tf.int32
-        )  # Scale and cast to integer
 
-        # One-hot encode the mask
         target_img_one_hot = tf.one_hot(target_img, depth=num_classes)
+        # One hot encodes to mask
+        # e.g post_target_img_one_hot:  [[[[0 0 1 0 0]]
+        # 512 arrays of 512 elements each corresponding to a pixel which is one_hot encoded
+        # Which can be sliced in order to obtain the mask for each class
+
         # Remove old dimension
         target_img_one_hot = tf.squeeze(target_img_one_hot, axis=-2)
 

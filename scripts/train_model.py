@@ -13,6 +13,7 @@ from tensorflow import keras
 import modules.model_architectures as model_architectures
 from modules.pipeline import Pipeline
 from modules.custom_learning_rate import CustomLearningRateScheduler
+from modules.loss_functions import multi_class_loss
 
 """
 This script an initiator to train a segmentation model based upon the specified parameters in the script.
@@ -38,11 +39,11 @@ print(
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-BATCH_SIZE = 1
+GLOBAL_BATCH_SIZE = 2
 EPOCHS = 200
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 2
+MAX_NUMBER_SAMPLES = 8
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -51,8 +52,8 @@ training_mask_dir = "data/masks/train"
 training_pipeline.set_dataset_from_directory(
     input_img_dir=training_img_dir,
     target_img_dir=training_mask_dir,
-    batch_size=BATCH_SIZE,
-    # per_class_masks=True,
+    batch_size=GLOBAL_BATCH_SIZE,
+    per_class_masks=True,
     max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 training_dataset = training_pipeline.dataset
@@ -62,10 +63,10 @@ validation_img_dir = "data/img/val"
 validation_mask_dir = "data/masks/val"
 validation_pipeline = Pipeline()
 validation_pipeline.set_dataset_from_directory(
-    batch_size=BATCH_SIZE,
+    batch_size=GLOBAL_BATCH_SIZE,
     input_img_dir=validation_img_dir,
     target_img_dir=validation_mask_dir,
-    # per_class_masks=True
+    per_class_masks=True,
     max_dataset_len=MAX_NUMBER_SAMPLES,
 )
 validation_dataset = validation_pipeline.dataset
@@ -107,7 +108,7 @@ with strategy.scope():
         "---------------------------------------------------------------------------------------------------"
     )
     print("Classes: ", NUM_CLASSES)
-    print("Total batch size:", BATCH_SIZE)
+    print("Global batch size:", GLOBAL_BATCH_SIZE)
     print("Epochs", EPOCHS)
     print(
         "---------------------------------------------------------------------------------------------------"
@@ -138,9 +139,9 @@ with strategy.scope():
 
     # * Learning rate parameters
 
-    base_lr = 0.03  # Target learning rate after warm-up
-    initial_lr = 0.0001  # Initial learning rate during warm-up
-    warmup_batches = 10  # Number of batches over which to warm up
+    base_lr = 0.0001  # Target learning rate after warm-up
+    initial_lr = 0.00005  # Initial learning rate during warm-up
+    warmup_batches = 1  # Number of batches over which to warm up
 
     milestones = [20, 30, 50]  # Epochs at which to decrease learning rate
 
@@ -148,12 +149,31 @@ with strategy.scope():
         learning_rate=base_lr, weight_decay=0.0005, momentum=0.9, nesterov=True
     )
 
+    # Weights for the Tversky loss function
+    # Format: (FP, FN) for each class
+    # e.g [Background, Buildings, Trees, Water, Road]
+    tversnky_weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
+    # Penalizes over segmentation of background
+    # Penalizes under segmentation of others
+
+    # Weights for the focal cross entropy loss function
+    # Format: (alpha, gamma) for each class
+    # alpha: Weight for class
+    # gamma: Impact of rare cases
+    # e.g [Background, Buildings, Trees, Water, Road]
+    binary_cross_entropy_weights = [0.6, 1, 0.8, 1, 1]
+    # Rare cases of buildings are penalized more
+    # Background holds less weight
+    # Trees are penalized but not as much as background
+
+    loss = multi_class_loss(tversnky_weights, binary_cross_entropy_weights, DEBUG=True)
+
     model.compile(
         optimizer=sgd,
-        loss="sparse_categorical_crossentropy",
+        loss=loss,
         metrics=[
             "accuracy",
-            keras.metrics.MeanIoU(num_classes=NUM_CLASSES, sparse_y_pred=False),
+            # keras.metrics.MeanIoU(num_classes=NUM_CLASSES, sparse_y_pred=False),
         ],
     )
 

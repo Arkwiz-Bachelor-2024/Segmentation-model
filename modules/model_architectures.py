@@ -166,24 +166,21 @@ def DeeplabV3Plus(img_size, num_classes):
     # Freeze the layers up until conv block 2
     for layer in resnet50.layers:
 
-        if layer.name == "conv_2_block_3_out":
+        if layer.name == "conv_3_block4_out":
             break
         layer.trainable = False
 
     # Make the output to 2nd convultional block
-    x = resnet50.get_layer("conv2_block3_out").output
+    x = resnet50.get_layer("conv3_block4_out").output
 
-    # Change to OS4 with multi-grid approach of (1,2,1)
-    # Stride is implicitly set to 1
-    x = convolution_block(x, num_filters=256, dilation_rate=2)
-    x = convolution_block(x, num_filters=512, dilation_rate=4)
-    x = convolution_block(x, num_filters=1024, dilation_rate=2)
-
-    # Dropout features from encoder
-    x = layers.Dropout(0.3)(x)
+    # Change to OS8
+    x = convolution_block(x, num_filters=512, dilation_rate=2)
+    x = convolution_block(x, num_filters=1024, dilation_rate=4)
 
     # ASPP pyramid
     x = DilatedSpatialPyramidPooling(x)
+
+    x = layers.Dropout(0.3)(x)
 
     # 4x upsampling
     input_a = layers.UpSampling2D(
@@ -197,7 +194,6 @@ def DeeplabV3Plus(img_size, num_classes):
     x = layers.Concatenate(axis=-1)([input_a, input_b])
 
     # Dropout of features from encoder and global context
-    x = layers.Dropout(0.3)(x)
 
     # Regular convolutions on global context from ASPP and low-level(early) features
     # 2 * 3x3 convolutions
