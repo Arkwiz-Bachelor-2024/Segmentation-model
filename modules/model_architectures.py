@@ -193,8 +193,6 @@ def DeeplabV3Plus(img_size, num_classes):
     # Concatenate the low-level features with the high-level features
     x = layers.Concatenate(axis=-1)([input_a, input_b])
 
-    # Dropout of features from encoder and global context
-
     # Regular convolutions on global context from ASPP and low-level(early) features
     # 2 * 3x3 convolutions
     x = convolution_block(x)

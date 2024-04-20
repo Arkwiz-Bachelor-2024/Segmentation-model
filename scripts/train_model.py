@@ -43,7 +43,7 @@ GLOBAL_BATCH_SIZE = 2
 EPOCHS = 200
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 8
+MAX_NUMBER_SAMPLES = 4
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -77,9 +77,7 @@ strategy = tf.distribute.MirroredStrategy()
 with strategy.scope():
 
     # * Model
-    model = model_architectures.DeeplabV3Plus(
-        img_size=IMG_SIZE, num_classes=NUM_CLASSES
-    )
+    model = model_architectures.UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
     # Callbacks
     early_stopping = keras.callbacks.EarlyStopping(
@@ -140,7 +138,7 @@ with strategy.scope():
     # * Learning rate parameters
 
     base_lr = 0.0001  # Target learning rate after warm-up
-    initial_lr = 0.00005  # Initial learning rate during warm-up
+    initial_lr = 1e-5  # Initial learning rate during warm-up
     warmup_batches = 1  # Number of batches over which to warm up
 
     milestones = [20, 30, 50]  # Epochs at which to decrease learning rate
@@ -153,13 +151,13 @@ with strategy.scope():
     # Format: (FP, FN) for each class
     # e.g [Background, Buildings, Trees, Water, Road]
     # Weights decide how much the model should penalize false positives and false negatives
-    tversnky_weights = [(2, 1), (1, 2), (1, 1), (1, 1), (1, 1)]
+    tversnky_weights = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
     # Penalizes over segmentation of background and under segmentation of buildings
 
     # Weights for the cross entropy loss function
     # e.g [Background, Buildings, Trees, Water, Road]
-    # Weights decide how much the model should penalize false positives and false negatives
-    binary_cross_entropy_weights = [0.6, 1, 0.8, 1, 1]
+    # Weights decide how much the model should penalize each class
+    binary_cross_entropy_weights = [1, 2, 1, 2, 2]
     # Background and trees are weighted less as they are the dominat classes
 
     loss = multi_class_loss(tversnky_weights, binary_cross_entropy_weights, DEBUG=True)
