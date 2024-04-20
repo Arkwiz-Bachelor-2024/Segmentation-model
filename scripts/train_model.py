@@ -39,11 +39,11 @@ print(
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-GLOBAL_BATCH_SIZE = 1
+GLOBAL_BATCH_SIZE = 2
 EPOCHS = 200
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 2
+MAX_NUMBER_SAMPLES = 8
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -138,7 +138,7 @@ with strategy.scope():
     # * Learning rate parameters
 
     base_lr = 0.0001  # Target learning rate after warm-up
-    initial_lr = 1e-2  # Initial learning rate during warm-up
+    initial_lr = 1e-5  # Initial learning rate during warm-up
     warmup_batches = 1  # Number of batches over which to warm up
 
     milestones = [20, 30, 50]  # Epochs at which to decrease learning rate
@@ -151,13 +151,13 @@ with strategy.scope():
     # Format: (FP, FN) for each class
     # e.g [Background, Buildings, Trees, Water, Road]
     # Weights decide how much the model should penalize false positives and false negatives
-    tversnky_weights = [(2, 1), (1, 1), (2, 1), (1, 1), (1, 1)]
+    tversnky_weights = [(2, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
     # Penalizes over segmentation of background and under segmentation of buildings
 
     # Weights for the cross entropy loss function
     # e.g [Background, Buildings, Trees, Water, Road]
     # Weights decide how much the model should penalize each class
-    binary_cross_entropy_weights = [1, 2, 1, 2, 2]
+    binary_cross_entropy_weights = [0.5, 1, 1, 1, 1]
     # Background and trees are weighted less as they are the dominat classes
 
     loss = multi_class_loss(tversnky_weights, binary_cross_entropy_weights, DEBUG=True)
