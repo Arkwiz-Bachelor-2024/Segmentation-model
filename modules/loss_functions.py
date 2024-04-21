@@ -8,7 +8,7 @@ Module containing custom loss functions used with Keras API.
 
 
 # Smooth is added for numerical stability
-def __tversky_index_class__(y_true, y_pred, alpha, beta, smooth=1e-5):
+def __tversky_index_class__(y_true, y_pred, alpha, beta):
     """
     Calculates the tvernsky index for a given class id.
     """
@@ -18,12 +18,21 @@ def __tversky_index_class__(y_true, y_pred, alpha, beta, smooth=1e-5):
     # only result in a positive value if the prediction is correct
     # e.g [0,0,1,0] * [1,0,1,0] = [0,0,1,0] = 1 as only on of them is actually correct
 
-    true_positives = K.sum(y_true * y_pred)
-    false_positives = K.sum((1 - y_true) * y_pred)
-    false_negatives = K.sum(y_true * (1 - y_pred))
+    true_positives = tf.reduce_sum(y_true * y_pred)
+    false_positives = tf.reduce_sum((1 - y_true) * y_pred)
+    false_negatives = tf.reduce_sum(y_true * (1 - y_pred))
 
-    return (true_positives + smooth) / (
-        true_positives + alpha * false_positives + beta * false_negatives + smooth
+    # tf.print("True Positives: ", true_positives)
+    # tf.print("False Positives: ", false_positives)
+    # tf.print("False Negatives: ", false_negatives)
+    # tf.print(
+    #     "Class_loss: ",
+    #     (true_positives + smooth)
+    #     / (true_positives + alpha * false_positives + beta * false_negatives + smooth),
+    # )
+
+    return (true_positives + K.epsilon()) / (
+        true_positives + alpha * false_positives + beta * false_negatives + K.epsilon()
     )
 
 
@@ -47,16 +56,11 @@ def multi_class_loss(tvernsky_weights, cross_entropy_weights, DEBUG=False):
 
         tversky_loss = 0.0
         binary_cross_entropy_loss = 0.0
-
-        # Ensure the weights list matches the number of classes
-        assert (
-            len(tvernsky_weights) and len(cross_entropy_weights) == num_classes
-        ), "Weights list must match the number of classes."
+        total_local_batch_loss = 0.0
 
         for class_idx in range(num_classes):
 
             y_pred_sliced = y_pred[..., class_idx]
-            # y_pred_sliced = tf.expand_dims(y_pred, axis=-1)
             # Y_pred is sliced so that it contains an array of the probabilities for each pixel
             # that it belongs to this class
             # An array of 512 rows where each row contains 512 probabilities corresponding to each pixel
@@ -66,49 +70,63 @@ def multi_class_loss(tvernsky_weights, cross_entropy_weights, DEBUG=False):
             #     ....
             #     [0.3,0,4,0.1,0,3........0.1,.2]
 
+            # tf.print("y_true: ", y_true)
+            # tf.print("y_pred: ", y_pred.shape)
+            # tf.print("y_pred: ", y_pred)
+            # tf.print("y_pred_argmax: ", tf.argmax(y_pred, axis=-1).shape)
+            # tf.print("y_pred_argmax: ", tf.argmax(y_pred, axis=-1))
+
             y_true_sliced = y_true[..., class_idx]
-            # y_true_sliced = tf.expand_dims(y_true, axis=-1)
             # y_true is the same aswell only that the values are 0 or 1
 
-            # Compute tversnky loss
-            alpha_tversnky, beta_tvernsky = tvernsky_weights[class_idx]
-            tversky_loss += __tversky_index_class__(
-                # ... slices all other axies before the ... ,in this case for each time in the for loop it will
-                # "slice" out a 2D array containing predictions on that class
-                y_true_sliced,
-                y_pred_sliced,
-                alpha_tversnky,
-                beta_tvernsky,
-            )
+            if tvernsky_weights != None:
 
-            # Expand dims for special binary cross entropy loss using tf.keras.losses.BinaryCrossentropy
-            y_true_sliced = tf.expand_dims(y_true_sliced, axis=-1)
-            y_pred_sliced = tf.expand_dims(y_pred_sliced, axis=-1)
+                # Compute tversnky loss
+                alpha_tversnky, beta_tvernsky = tvernsky_weights[class_idx]
+                tversky_loss += __tversky_index_class__(
+                    # ... slices all other axies before the ... ,in this case for each time in the for loop it will
+                    # "slice" out a 2D array containing predictions on that class
+                    y_true_sliced,
+                    y_pred_sliced,
+                    alpha_tversnky,
+                    beta_tvernsky,
+                )
 
-            # # Compute cross entropy loss
-            class_weight = cross_entropy_weights[class_idx]
-            binary_cross_entropy = tf.keras.losses.BinaryCrossentropy(
-                reduction=tf.keras.losses.Reduction.NONE,
-                from_logits=False,
-            )
-            pre_weighted_loss = binary_cross_entropy(y_true_sliced, y_pred_sliced)
-            binary_cross_entropy_loss += class_weight * pre_weighted_loss
+            if cross_entropy_weights != None:
+                # Expand dims for special binary cross entropy loss using tf.keras.losses.BinaryCrossentropy
+                y_true_sliced = tf.expand_dims(y_true_sliced, axis=-1)
+                y_pred_sliced = tf.expand_dims(y_pred_sliced, axis=-1)
 
-        total_tvernsky_loss = 1 - tversky_loss / num_classes
+                # # Compute cross entropy loss
+                class_weight = cross_entropy_weights[class_idx]
+                binary_cross_entropy = tf.keras.losses.BinaryCrossentropy(
+                    reduction=tf.keras.losses.Reduction.NONE,
+                    from_logits=False,
+                )
+                pre_weighted_loss = binary_cross_entropy(y_true_sliced, y_pred_sliced)
+                binary_cross_entropy_loss += class_weight * pre_weighted_loss
 
-        # Calculates the average loss for each pixel across all samples in the local batch
-        total_binary_cross_entropy_loss = tf.reduce_mean(binary_cross_entropy_loss)
+        if tvernsky_weights != None:
+            total_tvernsky_loss = tf.clip_by_value(1 - (tversky_loss), 0, 1)
+            total_local_batch_loss += total_tvernsky_loss
 
-        total_local_batch_loss = total_binary_cross_entropy_loss + total_tvernsky_loss
+        if cross_entropy_weights != None:
+            # Calculates the average loss for each pixel across all samples in the local batch
+            total_binary_cross_entropy_loss = tf.reduce_mean(binary_cross_entropy_loss)
+            total_local_batch_loss += total_binary_cross_entropy_loss
 
         if DEBUG:
             tf.print("---------------------------")
             tf.print("Loss for this Sample:")
-            tf.print(
-                "Total_binary_cross_entropy_loss: ",
-                tf.reduce_mean(total_binary_cross_entropy_loss),
-            )
-            tf.print("Total tversky loss: ", total_tvernsky_loss)
+            if tvernsky_weights != None:
+                tf.print("Total tversky loss: ", total_tvernsky_loss)
+
+            if cross_entropy_weights != None:
+                tf.print(
+                    "Total_binary_cross_entropy_loss: ",
+                    tf.reduce_mean(total_binary_cross_entropy_loss),
+                )
+
             tf.print("Total loss: ", total_local_batch_loss)
 
         return total_local_batch_loss

@@ -39,11 +39,11 @@ print(
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-GLOBAL_BATCH_SIZE = 2
+GLOBAL_BATCH_SIZE = 10
 EPOCHS = 200
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 8
+MAX_NUMBER_SAMPLES = 20
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -137,11 +137,11 @@ with strategy.scope():
 
     # * Learning rate parameters
 
-    base_lr = 0.0001  # Target learning rate after warm-up
-    initial_lr = 1e-5  # Initial learning rate during warm-up
+    base_lr = 1e-2  # Target learning rate after warm-up
+    initial_lr = 1e-4  # Initial learning rate during warm-up
     warmup_batches = 1  # Number of batches over which to warm up
 
-    milestones = [20, 30, 50]  # Epochs at which to decrease learning rate
+    milestones = [15, 30, 50]  # Epochs at which to decrease learning rate
 
     sgd = keras.optimizers.SGD(
         learning_rate=base_lr, weight_decay=0.0005, momentum=0.9, nesterov=True
@@ -149,18 +149,23 @@ with strategy.scope():
 
     # Weights for the Tversky loss function
     # Format: (FP, FN) for each class
+    # (Penalty for over segmentation, Penalty for under segmentation)
     # e.g [Background, Buildings, Trees, Water, Road]
     # Weights decide how much the model should penalize false positives and false negatives
-    tversnky_weights = [(2, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
-    # Penalizes over segmentation of background and under segmentation of buildings
+    tversnky_weights = [(2, 1), (1, 3), (1, 1), (1, 1), (1, 3)]
+    # Penalizes over segmentation of background and under segmentation of buildings and road
 
     # Weights for the cross entropy loss function
     # e.g [Background, Buildings, Trees, Water, Road]
     # Weights decide how much the model should penalize each class
-    binary_cross_entropy_weights = [0.5, 1, 1, 1, 1]
-    # Background and trees are weighted less as they are the dominat classes
+    binary_cross_entropy_weights = [1, 3, 2, 2, 3]
+    # Buildings and roads are weighted more on the pixel-level.
 
-    loss = multi_class_loss(tversnky_weights, binary_cross_entropy_weights, DEBUG=True)
+    loss = multi_class_loss(
+        tvernsky_weights=tversnky_weights,
+        cross_entropy_weights=binary_cross_entropy_weights,
+        DEBUG=True,
+    )
 
     model.compile(
         optimizer=sgd,
