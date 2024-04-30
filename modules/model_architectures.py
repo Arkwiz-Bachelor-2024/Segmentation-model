@@ -22,6 +22,9 @@ def UNET_model(img_size, num_classes):
 
     previous_block_activation = x  # Set aside residual
 
+    skip_connections = []
+    skip_connections.append(x)  # Adds the first skip connection
+
     # Blocks 1, 2, 3 are identical apart from the feature depth.
     for filters in [64, 128, 256]:
         x = layers.Activation("relu")(x)
@@ -39,13 +42,13 @@ def UNET_model(img_size, num_classes):
             previous_block_activation
         )
         x = layers.add([x, residual])  # Add back residual
+        skip_connections.append(x)  # Add this skip connection to the list
         previous_block_activation = x  # Set aside next residual
-
-    x = layers.Dropout(0.2)(x)
 
     ### [Second half of the network: upsampling inputs] ###
 
     for filters in [256, 128, 64, 32]:
+
         x = layers.Activation("relu")(x)
         x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
         x = layers.BatchNormalization()(x)
@@ -62,6 +65,16 @@ def UNET_model(img_size, num_classes):
         x = layers.add([x, residual])  # Add back residual
         previous_block_activation = x  # Set aside next residual
 
+        upsampled_skip = layers.UpSampling2D(2)(skip_connections.pop())
+
+        # Adds the skip connection
+        x = layers.Concatenate(axis=-1)([x, upsampled_skip])
+
+        # Convolutional block after adding skip connection
+        x = layers.Conv2D(filters, 3, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Activation("relu")(x)
+
     # Add a per-pixel classification layer
     outputs = layers.Conv2D(num_classes, 3, activation="softmax", padding="same")(x)
 
@@ -74,7 +87,7 @@ def UNET_model(img_size, num_classes):
 def ResNet_model(img_size, num_classes):
     inputs = keras.Input(shape=img_size + (3,))
 
-    encoder = keras.applications.ResNet101(
+    encoder = keras.applications.ResNet50(
         include_top=False, weights="imagenet", input_tensor=inputs
     )
 
@@ -119,6 +132,33 @@ def ResNet_model(img_size, num_classes):
 # TODO tvernsky loss, crop size, multi-scaling, FCRF?, DPC?
 def DeeplabV3Plus(img_size, num_classes):
 
+    def resnet_block(x, filters, kernel_size, stride=1, dilation_rate=1):
+        f1, f2, f3 = filters
+
+        # Shortcut path
+        s = layers.Conv2D(f3, (1, 1), strides=stride, padding="same")(x)
+        s = layers.BatchNormalization()(s)
+
+        # Main path
+        x = layers.Conv2D(f1, (1, 1), strides=stride, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.ReLU()(x)
+
+        x = layers.Conv2D(f2, kernel_size, padding="same", dilation_rate=dilation_rate)(
+            x
+        )
+        x = layers.BatchNormalization()(x)
+        x = layers.ReLU()(x)
+
+        x = layers.Conv2D(f3, (1, 1), padding="same")(x)
+        x = layers.BatchNormalization()(x)
+
+        # Add shortcut path to the main path
+        x = layers.Add()([x, s])
+        x = layers.ReLU()(x)
+
+        return x
+
     def convolution_block(
         block_input, num_filters=256, kernel_size=3, dilation_rate=1, use_bias=False
     ):
@@ -160,34 +200,27 @@ def DeeplabV3Plus(img_size, num_classes):
     model_input = keras.Input(shape=img_size + (3,))
     preprocessed = keras.applications.resnet50.preprocess_input(model_input)
     resnet50 = keras.applications.ResNet50(
-        weights="imagenet", include_top=False, input_tensor=preprocessed
+        weights="imagenet",
+        include_top=False,
+        input_tensor=preprocessed,
     )
 
     # Freeze the layers up until conv block 2
     for layer in resnet50.layers:
-
-        if layer.name == "conv_3_block4_out":
-            break
         layer.trainable = False
 
     # Make the output to 2nd convultional block
-    x = resnet50.get_layer("conv3_block4_out").output
-
-    # Change to OS8
-    x = convolution_block(x, num_filters=512, dilation_rate=2)
-    x = convolution_block(x, num_filters=1024, dilation_rate=4)
+    x = resnet50.get_layer("conv5_block3_2_relu").output
 
     # ASPP pyramid
     x = DilatedSpatialPyramidPooling(x)
-
-    x = layers.Dropout(0.3)(x)
 
     # 4x upsampling
     input_a = layers.UpSampling2D(
         size=(img_size[0] // 4 // x.shape[1], img_size[1] // 4 // x.shape[2]),
         interpolation="bilinear",
     )(x)
-    input_b = resnet50.get_layer("conv2_block3_out").output
+    input_b = resnet50.get_layer("conv2_block3_2_relu").output
     input_b = convolution_block(input_b, num_filters=48, kernel_size=1)
 
     # Concatenate the low-level features with the high-level features

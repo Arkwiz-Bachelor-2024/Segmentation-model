@@ -56,7 +56,7 @@ def simple_image_display(titles=None, images=None, descriptions=None, color_map=
     plt.show()
 
 
-def plot_confusion_matrix(cm, class_names, save_path):
+def plot_confusion_matrix(cm, class_names, save_path, title):
     """
     Plots a confusion matrix using Matplotlib's functionality.
 
@@ -96,5 +96,5 @@ def plot_confusion_matrix(cm, class_names, save_path):
                 color="white" if cm[i, j] > thresh else "black",
             )
     fig.tight_layout()
-    plt.title("Normalized Confusion Matrix")
+    plt.title(title)
     plt.savefig(save_path, format="png", dpi=300, bbox_inches="tight")

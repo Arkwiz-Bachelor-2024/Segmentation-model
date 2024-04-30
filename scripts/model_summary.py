@@ -15,6 +15,8 @@ from modules.pipeline import Pipeline
 from modules.custom_learning_rate import CustomLearningRateScheduler
 
 
-model = model_architectures.DeeplabV3Plus((512, 512), 5)
+model = model_architectures.UNET_model((512, 512), 5)
 
 model.summary()
+
+print("done")

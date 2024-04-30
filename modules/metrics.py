@@ -27,12 +27,13 @@ def get_class_distribution(image):
 
 def get_OA(ground_truth, predictions):
 
-    true_positives = np.sum(ground_truth == predictions)
-
     if isinstance(ground_truth, np.ndarray):
+        true_positives = np.sum(ground_truth == predictions)
         overall_accuracy = true_positives / ground_truth.size
 
     else:
-        overall_accuracy = true_positives / ground_truth.numpy().size
+        ground_truth = ground_truth.numpy().squeeze()
+        true_positives = np.sum(ground_truth == predictions)
+        overall_accuracy = true_positives / ground_truth.size
 
     return overall_accuracy

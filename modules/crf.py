@@ -117,7 +117,7 @@ def crf_mask_grid_search(
                         "compat_gaussian": f"Gaussian: {compat_gaussian}",
                         "compat_bilateral": f"Bilateral: {compat_bilateral}",
                     },
-                    "mask": crf_masks[2],
+                    "mask": crf_masks[1],
                     "score": performance,
                 }
             )

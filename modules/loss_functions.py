@@ -99,9 +99,11 @@ def multi_class_loss(tvernsky_weights, cross_entropy_weights, DEBUG=False):
 
                 # # Compute cross entropy loss
                 class_weight = cross_entropy_weights[class_idx]
-                binary_cross_entropy = tf.keras.losses.BinaryCrossentropy(
+                binary_cross_entropy = tf.keras.losses.BinaryFocalCrossentropy(
                     reduction=tf.keras.losses.Reduction.NONE,
                     from_logits=False,
+                    alpha=class_weight,
+                    gamma=4 / 3,
                 )
                 pre_weighted_loss = binary_cross_entropy(y_true_sliced, y_pred_sliced)
                 binary_cross_entropy_loss += class_weight * pre_weighted_loss

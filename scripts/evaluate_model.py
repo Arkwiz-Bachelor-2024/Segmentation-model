@@ -10,29 +10,36 @@ import numpy as np
 import tensorflow as tf
 
 from sklearn.metrics import confusion_matrix
+from modules.metrics import get_OA
 from modules.pipeline import Pipeline
 from modules.crf import pre_defined_conditional_random_field
 from modules.plot import plot_confusion_matrix
-from modules.loss_functions import multi_class_loss
+
+model_name = "Deeplabv3Plus_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid"
 
 # * Components
-model = keras.models.load_model(f"./models/10epoch_32b.keras", compile=False)
+model = keras.models.load_model(
+    f"./models/{model_name}",
+    compile=False,
+)
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
     input_img_dir="data/img/test",
     target_img_dir="data/masks/test",
-    max_dataset_len=20,
+    max_dataset_len=100,
 )
 test_dataset = pipeline.dataset
 pred_masks_probs = model.predict(test_dataset)
 raw_masks = np.argmax(pred_masks_probs, axis=-1)
 
 NUM_CLASSES = 5
-# Initialize the MeanIoU metric
-# TODO implement OA metric
+
+# Initialize the Metrics
 raw_miou_metric = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
 crf_miou_metric = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
+total_raw_OA = 0
+total_crf_OA = 0
 
 for prediction, (image, mask), pred_mask in zip(
     pred_masks_probs, test_dataset, raw_masks
@@ -43,9 +50,17 @@ for prediction, (image, mask), pred_mask in zip(
         inference_iterations=5,
     )
 
-    # Update mIoU
+    # mIoU
     raw_miou_metric.update_state(mask, pred_mask)
     crf_miou_metric.update_state(mask, crf_mask)
+
+    # OA
+    total_raw_OA += get_OA(mask, pred_mask)
+    total_crf_OA += get_OA(mask, crf_mask)
+
+
+total_raw_OA = total_raw_OA / len(pred_masks_probs)
+total_crf_OA = total_crf_OA / len(pred_masks_probs)
 
 # Extract and flatten masks
 masks_only_dataset = test_dataset.map(lambda image, mask: tf.reshape(mask, [-1]))
@@ -69,7 +84,7 @@ crf_IoU = crf_miou_metric.result().numpy()
 
 cm_classes = ["Background", "Building", "Woodland", "Water", "Road"]
 # Check if the directory exists
-save_dir = "./docs/models/test/plots/"
+save_dir = "./docs/plots/"
 if not os.path.exists(save_dir):
     # If the directory does not exist, create it
     os.makedirs(save_dir)
@@ -78,7 +93,10 @@ if not os.path.exists(save_dir):
 plot_confusion_matrix(
     cm_percentage,
     cm_classes,
-    save_path=f"{save_dir}cm_matrix.png",
+    save_path=f"{save_dir}/{model_name}_cm.png",
+    title=f"{model_name}_cm.png",
 )
 print(f"Raw mIoU over the test set: {raw_IoU:.2}")
 print(f"Crf mIoU over the test set: {crf_IoU:.2}")
+print(f"Raw OA over the test set: {total_raw_OA:.2}")
+print(f"Crf OA over the test set: {total_crf_OA:.2}")

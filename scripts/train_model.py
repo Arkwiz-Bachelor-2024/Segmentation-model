@@ -39,11 +39,11 @@ print(
 # * Hyperparameters
 IMG_SIZE = (512, 512)
 NUM_CLASSES = 5
-GLOBAL_BATCH_SIZE = 10
+GLOBAL_BATCH_SIZE = 2
 EPOCHS = 200
 
 # * Datasets
-MAX_NUMBER_SAMPLES = 20
+MAX_NUMBER_SAMPLES = 4
 
 # Trainig set
 training_pipeline = Pipeline()
@@ -158,11 +158,12 @@ with strategy.scope():
     # Weights for the cross entropy loss function
     # e.g [Background, Buildings, Trees, Water, Road]
     # Weights decide how much the model should penalize each class
-    binary_cross_entropy_weights = [1, 3, 2, 2, 3]
+    # binary_cross_entropy_weights = [1, 3, 2, 2, 3]
+    binary_cross_entropy_weights = [2.12, 35.52, 3.31, 12.87, 28.13]
     # Buildings and roads are weighted more on the pixel-level.
 
     loss = multi_class_loss(
-        tvernsky_weights=tversnky_weights,
+        tvernsky_weights=None,
         cross_entropy_weights=binary_cross_entropy_weights,
         DEBUG=True,
     )
@@ -191,4 +192,4 @@ with strategy.scope():
         verbose=2,
     )
 
-    print("Training completed")
+    # print("Training completed")
