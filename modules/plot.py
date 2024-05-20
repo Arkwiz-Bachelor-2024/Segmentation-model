@@ -11,14 +11,8 @@ def simple_image_display(titles=None, images=None, descriptions=None, color_map=
     - titles: list of str, titles for each image.
     - images: list of ndarray, image data in a format compatible with plt.imshow.
     - descriptions: list of list of str, each list contains parts of the description for each image.
+    - colour_map : str, colour map to be used for displaying the image.
     """
-    # if not images or not descriptions or not titles:
-    #     raise ValueError("titles, images, and descriptions must be non-empty lists.")
-
-    # if len(images) != len(descriptions) or len(images) != len(titles):
-    #     raise ValueError(
-    #         "titles, images, and descriptions must be lists of the same length."
-    #     )
 
     num_images = len(images)
     plt.figure(figsize=(15, 8))
@@ -79,11 +73,8 @@ def plot_confusion_matrix(cm, class_names, save_path, title):
         xlabel="Predicted label",
     )
 
-    # Rotate the tick labels and set their alignment.
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
-
-    # Loop over data dimensions and create text annotations.
-    fmt = ".1f"  # Format for annotations inside the heatmap.
+    fmt = ".1f"
     thresh = cm.max() / 2.0
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):

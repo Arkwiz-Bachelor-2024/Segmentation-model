@@ -15,7 +15,7 @@ from modules.pipeline import Pipeline
 from modules.crf import pre_defined_conditional_random_field
 from modules.plot import plot_confusion_matrix
 
-model_name = "Deeplabv3Plus_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid"
+model_name = "10epoch_32b.keras"
 
 # * Components
 model = keras.models.load_model(
@@ -36,31 +36,27 @@ raw_masks = np.argmax(pred_masks_probs, axis=-1)
 NUM_CLASSES = 5
 
 # Initialize the Metrics
+
+# mIoU
 raw_miou_metric = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
-crf_miou_metric = keras.metrics.MeanIoU(num_classes=NUM_CLASSES)
+
+# Precison
+presicion = keras.metrics.Precision()
+
+# OA
 total_raw_OA = 0
-total_crf_OA = 0
 
 for prediction, (image, mask), pred_mask in zip(
     pred_masks_probs, test_dataset, raw_masks
 ):
-    crf_mask = pre_defined_conditional_random_field(
-        image=image.numpy().squeeze(),
-        pred_mask_probs=prediction,
-        inference_iterations=5,
-    )
-
     # mIoU
     raw_miou_metric.update_state(mask, pred_mask)
-    crf_miou_metric.update_state(mask, crf_mask)
 
     # OA
     total_raw_OA += get_OA(mask, pred_mask)
-    total_crf_OA += get_OA(mask, crf_mask)
 
 
 total_raw_OA = total_raw_OA / len(pred_masks_probs)
-total_crf_OA = total_crf_OA / len(pred_masks_probs)
 
 # Extract and flatten masks
 masks_only_dataset = test_dataset.map(lambda image, mask: tf.reshape(mask, [-1]))
@@ -80,7 +76,6 @@ with np.errstate(divide="ignore", invalid="ignore"):
 cm_percentage = cm_normalized * 100  # Convert to percentages
 
 raw_IoU = raw_miou_metric.result().numpy()
-crf_IoU = crf_miou_metric.result().numpy()
 
 cm_classes = ["Background", "Building", "Woodland", "Water", "Road"]
 # Check if the directory exists
@@ -97,6 +92,4 @@ plot_confusion_matrix(
     title=f"{model_name}_cm.png",
 )
 print(f"Raw mIoU over the test set: {raw_IoU:.2}")
-print(f"Crf mIoU over the test set: {crf_IoU:.2}")
 print(f"Raw OA over the test set: {total_raw_OA:.2}")
-print(f"Crf OA over the test set: {total_crf_OA:.2}")

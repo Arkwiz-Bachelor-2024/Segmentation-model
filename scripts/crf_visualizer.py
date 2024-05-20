@@ -17,8 +17,9 @@ from modules.plot import simple_image_display
 
 # * Components
 model = keras.models.load_model(
-    "./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild"
-, compile=False
+    "./models/UNETplus_2x_100e_16b_Poly_Adam_low_wBCE_milestones_warmup+DA_mid",
+    compile=False,
+)
 pipeline = Pipeline()
 pipeline.set_dataset_from_directory(
     batch_size=1,
@@ -32,8 +33,8 @@ colors = [(1, 1, 1), (1, 0, 0), (0, 1, 0), (0, 0, 1), (0.5, 0.5, 0.5)]
 cmap = ListedColormap(colors)
 
 # even_images_indecies = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
-# even_images_indecies = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
-even_images_indecies = np.arange(870, 880)
+even_images_indecies = [537, 1014, 1190, 71, 84, 1305, 1215, 86, 1184, 547]
+# even_images_indecies = np.arange(870, 880)
 
 images = []
 masks = []
@@ -46,7 +47,7 @@ pred_mask_probs_list = []
 for image in images:
     pred_mask_probs_list.append(model.predict(image))
 
-sdims_options = [(2, 2), (1, 1), (3, 3)]
+sdims_options = [(1, 1), (2, 2), (3, 3)]
 compats_options = [(5, 5), (10, 5), (5, 10)]
 
 crf_grid_details = crf_mask_grid_search(
@@ -72,7 +73,7 @@ for i in range(len(crf_grid_parameters)):
 
     crf_titles.append(title)
 
-index = 1
+index = 0
 
 crf_grid_masks.insert(0, images[index].numpy().squeeze())
 crf_grid_scores.insert(0, " ")

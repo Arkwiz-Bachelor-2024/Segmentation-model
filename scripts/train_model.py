@@ -77,9 +77,9 @@ strategy = tf.distribute.MirroredStrategy()
 with strategy.scope():
 
     # * Model
-    model = model_architectures.UNET_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
+    model = model_architectures.ResNet_model(img_size=IMG_SIZE, num_classes=NUM_CLASSES)
 
-    # Callbacks
+    # * Callbacks
     early_stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss",
         min_delta=0,
@@ -191,5 +191,3 @@ with strategy.scope():
         validation_data=validation_dataset,
         verbose=2,
     )
-
-    # print("Training completed")

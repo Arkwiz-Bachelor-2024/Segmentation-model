@@ -149,16 +149,16 @@ class Pipeline:
         target_img_one_hot = tf.one_hot(target_img, depth=num_classes)
         # One hot encodes to mask
         # e.g post_target_img_one_hot:  [[[[0 0 1 0 0]]
-        # 512 arrays of 512 elements each corresponding to a pixel which is one_hot encoded
+        # 512 arrays with 512 elements each with a one-hot encoded array for the pixel
         # Which can be sliced in order to obtain the mask for each class
 
         # Remove old dimension
         target_img_one_hot = tf.squeeze(target_img_one_hot, axis=-2)
 
         # Data augmentation which will be applied differently each epoch giving different versions of the images each time.
-        # input_img, target_img_one_hot = self.__augment_image__(
-        #     input_img, target_img_one_hot
-        # )
+        input_img, target_img_one_hot = self.__augment_image__(
+            input_img, target_img_one_hot
+        )
 
         return input_img, target_img_one_hot
 

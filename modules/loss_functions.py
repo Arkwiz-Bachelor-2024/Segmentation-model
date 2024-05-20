@@ -10,7 +10,7 @@ Module containing custom loss functions used with Keras API.
 # Smooth is added for numerical stability
 def __tversky_index_class__(y_true, y_pred, alpha, beta):
     """
-    Calculates the tvernsky index for a given class id.
+    Calculates the tversky index for a given class id.
     """
 
     # Calculates the number of true positives, false positives and false negatives
@@ -22,15 +22,6 @@ def __tversky_index_class__(y_true, y_pred, alpha, beta):
     false_positives = tf.reduce_sum((1 - y_true) * y_pred)
     false_negatives = tf.reduce_sum(y_true * (1 - y_pred))
 
-    # tf.print("True Positives: ", true_positives)
-    # tf.print("False Positives: ", false_positives)
-    # tf.print("False Negatives: ", false_negatives)
-    # tf.print(
-    #     "Class_loss: ",
-    #     (true_positives + smooth)
-    #     / (true_positives + alpha * false_positives + beta * false_negatives + smooth),
-    # )
-
     return (true_positives + K.epsilon()) / (
         true_positives + alpha * false_positives + beta * false_negatives + K.epsilon()
     )
@@ -38,12 +29,7 @@ def __tversky_index_class__(y_true, y_pred, alpha, beta):
 
 def multi_class_loss(tvernsky_weights, cross_entropy_weights, DEBUG=False):
     """
-    #TODO document
-    Calculates the total loss based on pre-determined weights for each class.
-    Expects a list of tuples corresponding to the weights of its respective class
-    Format: (FP, FN) for each class
-    e.g [(1,1), (0.7,0.8)......]
-
+    Calculates the total loss for the model based on given weights.
 
     """
 
@@ -70,12 +56,6 @@ def multi_class_loss(tvernsky_weights, cross_entropy_weights, DEBUG=False):
             #     ....
             #     [0.3,0,4,0.1,0,3........0.1,.2]
 
-            # tf.print("y_true: ", y_true)
-            # tf.print("y_pred: ", y_pred.shape)
-            # tf.print("y_pred: ", y_pred)
-            # tf.print("y_pred_argmax: ", tf.argmax(y_pred, axis=-1).shape)
-            # tf.print("y_pred_argmax: ", tf.argmax(y_pred, axis=-1))
-
             y_true_sliced = y_true[..., class_idx]
             # y_true is the same aswell only that the values are 0 or 1
 
@@ -99,11 +79,9 @@ def multi_class_loss(tvernsky_weights, cross_entropy_weights, DEBUG=False):
 
                 # # Compute cross entropy loss
                 class_weight = cross_entropy_weights[class_idx]
-                binary_cross_entropy = tf.keras.losses.BinaryFocalCrossentropy(
+                binary_cross_entropy = tf.keras.losses.BinaryCrossEntropy(
                     reduction=tf.keras.losses.Reduction.NONE,
                     from_logits=False,
-                    alpha=class_weight,
-                    gamma=4 / 3,
                 )
                 pre_weighted_loss = binary_cross_entropy(y_true_sliced, y_pred_sliced)
                 binary_cross_entropy_loss += class_weight * pre_weighted_loss

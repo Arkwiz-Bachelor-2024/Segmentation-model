@@ -1,0 +1,391 @@
+We are running from this directory: /cluster/work/petteed/seg_model/Segmentation-model
+---------------------------------------------------------
+The name of the job is: Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+The job ID is 19102413
+---------------------------------------------------------
+Number of GPUs : 1,8
+---------------------------------------------------------
+Assert Enviroment modules are loaded...
+---------------------------------------------------------
+Assert python modules are loaded....
+Requirement already satisfied: scikit-learn in /cluster/home/petteed/.local/lib/python3.10/site-packages (1.4.1.post1)
+Requirement already satisfied: joblib>=1.2.0 in /cluster/home/petteed/.local/lib/python3.10/site-packages (from scikit-learn) (1.3.2)
+Requirement already satisfied: numpy<2.0,>=1.19.5 in /cluster/apps/eb/software/SciPy-bundle/2022.05-foss-2022a/lib/python3.10/site-packages (from scikit-learn) (1.22.3)
+Requirement already satisfied: threadpoolctl>=2.0.0 in /cluster/apps/eb/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/site-packages (from scikit-learn) (3.1.0)
+Requirement already satisfied: scipy>=1.6.0 in /cluster/apps/eb/software/SciPy-bundle/2022.05-foss-2022a/lib/python3.10/site-packages (from scikit-learn) (1.8.1)
+Requirement already satisfied: matplotlib in /cluster/home/petteed/.local/lib/python3.10/site-packages (3.8.3)
+Requirement already satisfied: cycler>=0.10 in /cluster/home/petteed/.local/lib/python3.10/site-packages (from matplotlib) (0.12.1)
+Requirement already satisfied: packaging>=20.0 in /cluster/apps/eb/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/site-packages (from matplotlib) (20.9)
+Requirement already satisfied: python-dateutil>=2.7 in /cluster/apps/eb/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/site-packages (from matplotlib) (2.8.2)
+Requirement already satisfied: pyparsing>=2.3.1 in /cluster/apps/eb/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/site-packages (from matplotlib) (3.0.8)
+Requirement already satisfied: contourpy>=1.0.1 in /cluster/home/petteed/.local/lib/python3.10/site-packages (from matplotlib) (1.2.0)
+Requirement already satisfied: numpy<2,>=1.21 in /cluster/apps/eb/software/SciPy-bundle/2022.05-foss-2022a/lib/python3.10/site-packages (from matplotlib) (1.22.3)
+Requirement already satisfied: pillow>=8 in /cluster/home/petteed/.local/lib/python3.10/site-packages (from matplotlib) (10.2.0)
+Requirement already satisfied: kiwisolver>=1.3.1 in /cluster/home/petteed/.local/lib/python3.10/site-packages (from matplotlib) (1.4.5)
+Requirement already satisfied: fonttools>=4.22.0 in /cluster/home/petteed/.local/lib/python3.10/site-packages (from matplotlib) (4.50.0)
+Requirement already satisfied: six>=1.5 in /cluster/apps/eb/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/site-packages (from python-dateutil>=2.7->matplotlib) (1.16.0)
+Requirement already satisfied: cython in /cluster/apps/eb/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/site-packages (0.29.28)
+Collecting git+https://github.com/lucasb-eyer/pydensecrf.git
+  Cloning https://github.com/lucasb-eyer/pydensecrf.git to /tmp/pip-req-build-z4u2_ru6
+  Resolved https://github.com/lucasb-eyer/pydensecrf.git to commit 2723c7fa4f2ead16ae1ce3d8afe977724bb8f87f
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+---------------------------------------------------------
+GPU specifications:
+Mon Apr 22 18:58:33 2024       
++---------------------------------------------------------------------------------------+
+| NVIDIA-SMI 545.23.08              Driver Version: 545.23.08    CUDA Version: 12.3     |
+|-----------------------------------------+----------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |         Memory-Usage | GPU-Util  Compute M. |
+|                                         |                      |               MIG M. |
+|=========================================+======================+======================|
+|   0  NVIDIA A100-PCIE-40GB          On  | 00000000:13:00.0 Off |                    0 |
+| N/A   25C    P0              33W / 250W |      4MiB / 40960MiB |      0%      Default |
+|                                         |                      |             Disabled |
++-----------------------------------------+----------------------+----------------------+
+|   1  NVIDIA A100-PCIE-40GB          On  | 00000000:C1:00.0 Off |                    0 |
+| N/A   25C    P0              30W / 250W |      4MiB / 40960MiB |      0%      Default |
+|                                         |                      |             Disabled |
++-----------------------------------------+----------------------+----------------------+
+                                                                                         
++---------------------------------------------------------------------------------------+
+| Processes:                                                                            |
+|  GPU   GI   CI        PID   Type   Process name                            GPU Memory |
+|        ID   ID                                                             Usage      |
+|=======================================================================================|
+|  No running processes found                                                           |
++---------------------------------------------------------------------------------------+
+Training model:
+---------------------------------------------------------------------------------------------------
+Enviroment:
+---------------------------------------------------------------------------------------------------
+TensorFlow version: 2.11.0
+GPUs Available:  [PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU'), PhysicalDevice(name='/physical_device:GPU:1', device_type='GPU')]
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+Data shape
+Image shape: (32, 512, 512, 3)
+Mask shape: (32, 512, 512, 5)
+Training dataset:  <BatchDataset element_spec=(TensorSpec(shape=(None, 512, 512, 3), dtype=tf.float32, name=None), TensorSpec(shape=(None, 512, 512, 5), dtype=tf.float32, name=None))>
+Validation dataset: <BatchDataset element_spec=(TensorSpec(shape=(None, 512, 512, 3), dtype=tf.float32, name=None), TensorSpec(shape=(None, 512, 512, 5), dtype=tf.float32, name=None))>
+---------------------------------------------------------------------------------------------------
+Details:
+---------------------------------------------------------------------------------------------------
+Classes:  5
+Global batch size: 32
+Epochs:  50
+Optimizer:  <class 'keras.optimizers.optimizer_experimental.sgd.SGD'>
+Initial learning rate:  0.0003
+Base learning rate:  0.05
+Warmup-batches:  50
+Milestones:  [20, 35, 45]
+Tvernsky weights :  [(2, 1), (1, 3), (1, 2), (1, 3), (1, 3)]
+BCE weights:  [1, 3, 1, 2, 2]
+---------------------------------------------------------------------------------------------------
+Epoch 1/50
+
+Epoch 1: val_loss improved from inf to 3.30622, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+234/234 - 794s - loss: 2.9342 - accuracy: 0.6094 - val_loss: 3.3062 - val_accuracy: 0.6018 - 794s/epoch - 3s/step
+Epoch 2/50
+
+Epoch 2: val_loss improved from 3.30622 to 3.22939, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 1: Learning rate was 0.0490991.
+234/234 - 409s - loss: 2.7808 - accuracy: 0.5876 - val_loss: 3.2294 - val_accuracy: 0.3213 - 409s/epoch - 2s/step
+Epoch 3/50
+
+Epoch 3: val_loss did not improve from 3.22939
+
+Epoch 2: Learning rate was 0.0481963.
+234/234 - 378s - loss: 2.7107 - accuracy: 0.6026 - val_loss: 12.6279 - val_accuracy: 0.6002 - 378s/epoch - 2s/step
+Epoch 4/50
+
+Epoch 4: val_loss improved from 3.22939 to 3.09779, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 3: Learning rate was 0.0472917.
+234/234 - 400s - loss: 2.7397 - accuracy: 0.5952 - val_loss: 3.0978 - val_accuracy: 0.3181 - 400s/epoch - 2s/step
+Epoch 5/50
+
+Epoch 5: val_loss improved from 3.09779 to 2.58921, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 4: Learning rate was 0.0463852.
+234/234 - 399s - loss: 2.7173 - accuracy: 0.5982 - val_loss: 2.5892 - val_accuracy: 0.5606 - 399s/epoch - 2s/step
+Epoch 6/50
+
+Epoch 6: val_loss did not improve from 2.58921
+
+Epoch 5: Learning rate was 0.0454766.
+234/234 - 381s - loss: 2.6778 - accuracy: 0.6044 - val_loss: 2.9686 - val_accuracy: 0.6002 - 381s/epoch - 2s/step
+Epoch 7/50
+
+Epoch 7: val_loss did not improve from 2.58921
+
+Epoch 6: Learning rate was 0.0445661.
+234/234 - 377s - loss: 2.7170 - accuracy: 0.5992 - val_loss: 2.7526 - val_accuracy: 0.5668 - 377s/epoch - 2s/step
+Epoch 8/50
+
+Epoch 8: val_loss did not improve from 2.58921
+
+Epoch 7: Learning rate was 0.0436535.
+234/234 - 373s - loss: 2.6843 - accuracy: 0.5988 - val_loss: 3.4363 - val_accuracy: 0.6049 - 373s/epoch - 2s/step
+Epoch 9/50
+
+Epoch 9: val_loss did not improve from 2.58921
+
+Epoch 8: Learning rate was 0.0427387.
+234/234 - 371s - loss: 2.7638 - accuracy: 0.5722 - val_loss: 4.8033 - val_accuracy: 0.6002 - 371s/epoch - 2s/step
+Epoch 10/50
+
+Epoch 10: val_loss did not improve from 2.58921
+
+Epoch 9: Learning rate was 0.0418218.
+234/234 - 367s - loss: 2.6688 - accuracy: 0.5942 - val_loss: 7.3034 - val_accuracy: 0.6005 - 367s/epoch - 2s/step
+Epoch 11/50
+
+Epoch 11: val_loss did not improve from 2.58921
+
+Epoch 10: Learning rate was 0.0409026.
+234/234 - 368s - loss: 2.6367 - accuracy: 0.6071 - val_loss: 4.4803 - val_accuracy: 0.3166 - 368s/epoch - 2s/step
+Epoch 12/50
+
+Epoch 12: val_loss improved from 2.58921 to 2.49948, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 11: Learning rate was 0.0399811.
+234/234 - 394s - loss: 2.6342 - accuracy: 0.6005 - val_loss: 2.4995 - val_accuracy: 0.6688 - 394s/epoch - 2s/step
+Epoch 13/50
+
+Epoch 13: val_loss did not improve from 2.49948
+
+Epoch 12: Learning rate was 0.0390573.
+234/234 - 374s - loss: 2.6418 - accuracy: 0.5898 - val_loss: 3.6664 - val_accuracy: 0.6008 - 374s/epoch - 2s/step
+Epoch 14/50
+
+Epoch 14: val_loss did not improve from 2.49948
+
+Epoch 13: Learning rate was 0.038131.
+234/234 - 367s - loss: 2.6066 - accuracy: 0.5997 - val_loss: 3.2407 - val_accuracy: 0.3191 - 367s/epoch - 2s/step
+Epoch 15/50
+
+Epoch 15: val_loss did not improve from 2.49948
+
+Epoch 14: Learning rate was 0.0372023.
+234/234 - 372s - loss: 2.5972 - accuracy: 0.6055 - val_loss: 3.0185 - val_accuracy: 0.3401 - 372s/epoch - 2s/step
+Epoch 16/50
+
+Epoch 16: val_loss did not improve from 2.49948
+
+Epoch 15: Learning rate was 0.0362709.
+234/234 - 366s - loss: 2.5728 - accuracy: 0.6052 - val_loss: 3.7240 - val_accuracy: 0.6002 - 366s/epoch - 2s/step
+Epoch 17/50
+
+Epoch 17: val_loss did not improve from 2.49948
+
+Epoch 16: Learning rate was 0.0353369.
+234/234 - 365s - loss: 2.5562 - accuracy: 0.6081 - val_loss: 5.6393 - val_accuracy: 0.6002 - 365s/epoch - 2s/step
+Epoch 18/50
+
+Epoch 18: val_loss did not improve from 2.49948
+
+Epoch 17: Learning rate was 0.0344001.
+234/234 - 368s - loss: 2.5305 - accuracy: 0.6127 - val_loss: 5.3238 - val_accuracy: 0.3227 - 368s/epoch - 2s/step
+Epoch 19/50
+
+Epoch 19: val_loss did not improve from 2.49948
+
+Epoch 18: Learning rate was 0.0334605.
+234/234 - 368s - loss: 2.4920 - accuracy: 0.6189 - val_loss: 5.1960 - val_accuracy: 0.3182 - 368s/epoch - 2s/step
+Epoch 20/50
+
+Epoch 20: val_loss improved from 2.49948 to 2.40499, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 19: Learning rate was 0.0325179.
+234/234 - 397s - loss: 2.4536 - accuracy: 0.6202 - val_loss: 2.4050 - val_accuracy: 0.6304 - 397s/epoch - 2s/step
+Epoch 21/50
+
+Epoch 21: val_loss improved from 2.40499 to 2.24316, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 20: Learning rate was 0.00315723.
+234/234 - 398s - loss: 2.4181 - accuracy: 0.6215 - val_loss: 2.2432 - val_accuracy: 0.7289 - 398s/epoch - 2s/step
+Epoch 22/50
+
+Epoch 22: val_loss improved from 2.24316 to 2.06544, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 21: Learning rate was 0.00306235.
+234/234 - 398s - loss: 2.2775 - accuracy: 0.6605 - val_loss: 2.0654 - val_accuracy: 0.7395 - 398s/epoch - 2s/step
+Epoch 23/50
+
+Epoch 23: val_loss did not improve from 2.06544
+
+Epoch 22: Learning rate was 0.00296715.
+234/234 - 368s - loss: 2.1385 - accuracy: 0.6844 - val_loss: 2.9091 - val_accuracy: 0.6310 - 368s/epoch - 2s/step
+Epoch 24/50
+
+Epoch 24: val_loss did not improve from 2.06544
+
+Epoch 23: Learning rate was 0.0028716.
+234/234 - 372s - loss: 2.0886 - accuracy: 0.6940 - val_loss: 2.9095 - val_accuracy: 0.6221 - 372s/epoch - 2s/step
+Epoch 25/50
+
+Epoch 25: val_loss did not improve from 2.06544
+
+Epoch 24: Learning rate was 0.0027757.
+234/234 - 367s - loss: 2.0524 - accuracy: 0.7019 - val_loss: 2.6358 - val_accuracy: 0.6459 - 367s/epoch - 2s/step
+Epoch 26/50
+
+Epoch 26: val_loss did not improve from 2.06544
+
+Epoch 25: Learning rate was 0.00267943.
+234/234 - 381s - loss: 2.0455 - accuracy: 0.7013 - val_loss: 3.1010 - val_accuracy: 0.6063 - 381s/epoch - 2s/step
+Epoch 27/50
+
+Epoch 27: val_loss did not improve from 2.06544
+
+Epoch 26: Learning rate was 0.00258278.
+234/234 - 374s - loss: 2.0206 - accuracy: 0.7060 - val_loss: 2.6122 - val_accuracy: 0.6414 - 374s/epoch - 2s/step
+Epoch 28/50
+
+Epoch 28: val_loss improved from 2.06544 to 1.95057, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 27: Learning rate was 0.00248572.
+234/234 - 391s - loss: 1.9944 - accuracy: 0.7108 - val_loss: 1.9506 - val_accuracy: 0.7461 - 391s/epoch - 2s/step
+Epoch 29/50
+
+Epoch 29: val_loss did not improve from 1.95057
+
+Epoch 28: Learning rate was 0.00238824.
+234/234 - 368s - loss: 1.9867 - accuracy: 0.7121 - val_loss: 2.0316 - val_accuracy: 0.7323 - 368s/epoch - 2s/step
+Epoch 30/50
+
+Epoch 30: val_loss did not improve from 1.95057
+
+Epoch 29: Learning rate was 0.00229031.
+234/234 - 369s - loss: 1.9513 - accuracy: 0.7191 - val_loss: 2.5094 - val_accuracy: 0.6571 - 369s/epoch - 2s/step
+Epoch 31/50
+
+Epoch 31: val_loss did not improve from 1.95057
+
+Epoch 30: Learning rate was 0.00219192.
+234/234 - 369s - loss: 1.9348 - accuracy: 0.7217 - val_loss: 2.7277 - val_accuracy: 0.6364 - 369s/epoch - 2s/step
+Epoch 32/50
+
+Epoch 32: val_loss did not improve from 1.95057
+
+Epoch 31: Learning rate was 0.00209303.
+234/234 - 369s - loss: 1.9138 - accuracy: 0.7247 - val_loss: 2.5630 - val_accuracy: 0.6495 - 369s/epoch - 2s/step
+Epoch 33/50
+
+Epoch 33: val_loss did not improve from 1.95057
+
+Epoch 32: Learning rate was 0.00199362.
+234/234 - 369s - loss: 1.9094 - accuracy: 0.7261 - val_loss: 2.9701 - val_accuracy: 0.6135 - 369s/epoch - 2s/step
+Epoch 34/50
+
+Epoch 34: val_loss did not improve from 1.95057
+
+Epoch 33: Learning rate was 0.00189366.
+234/234 - 368s - loss: 1.8870 - accuracy: 0.7302 - val_loss: 3.4072 - val_accuracy: 0.5985 - 368s/epoch - 2s/step
+Epoch 35/50
+
+Epoch 35: val_loss did not improve from 1.95057
+
+Epoch 34: Learning rate was 0.0017931.
+234/234 - 369s - loss: 1.8740 - accuracy: 0.7316 - val_loss: 3.2519 - val_accuracy: 0.6054 - 369s/epoch - 2s/step
+Epoch 36/50
+
+Epoch 36: val_loss did not improve from 1.95057
+
+Epoch 35: Learning rate was 0.000169192.
+234/234 - 368s - loss: 1.8497 - accuracy: 0.7361 - val_loss: 3.3781 - val_accuracy: 0.5988 - 368s/epoch - 2s/step
+Epoch 37/50
+
+Epoch 37: val_loss did not improve from 1.95057
+
+Epoch 36: Learning rate was 0.000159006.
+234/234 - 369s - loss: 1.8103 - accuracy: 0.7444 - val_loss: 2.0759 - val_accuracy: 0.7356 - 369s/epoch - 2s/step
+Epoch 38/50
+
+Epoch 38: val_loss improved from 1.95057 to 1.74966, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 37: Learning rate was 0.000148746.
+234/234 - 389s - loss: 1.7927 - accuracy: 0.7439 - val_loss: 1.7497 - val_accuracy: 0.7719 - 389s/epoch - 2s/step
+Epoch 39/50
+
+Epoch 39: val_loss did not improve from 1.74966
+
+Epoch 38: Learning rate was 0.000138408.
+234/234 - 369s - loss: 1.7938 - accuracy: 0.7428 - val_loss: 2.3564 - val_accuracy: 0.6834 - 369s/epoch - 2s/step
+Epoch 40/50
+
+Epoch 40: val_loss did not improve from 1.74966
+
+Epoch 39: Learning rate was 0.000127982.
+234/234 - 364s - loss: 1.7728 - accuracy: 0.7477 - val_loss: 1.9055 - val_accuracy: 0.7507 - 364s/epoch - 2s/step
+Epoch 41/50
+
+Epoch 41: val_loss did not improve from 1.74966
+
+Epoch 40: Learning rate was 0.000117462.
+234/234 - 365s - loss: 1.7738 - accuracy: 0.7469 - val_loss: 1.9796 - val_accuracy: 0.7439 - 365s/epoch - 2s/step
+Epoch 42/50
+
+Epoch 42: val_loss did not improve from 1.74966
+
+Epoch 41: Learning rate was 0.000106835.
+234/234 - 364s - loss: 1.7680 - accuracy: 0.7482 - val_loss: 1.8277 - val_accuracy: 0.7609 - 364s/epoch - 2s/step
+Epoch 43/50
+
+Epoch 43: val_loss improved from 1.74966 to 1.70634, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 42: Learning rate was 9.609e-05.
+234/234 - 391s - loss: 1.7621 - accuracy: 0.7500 - val_loss: 1.7063 - val_accuracy: 0.7752 - 391s/epoch - 2s/step
+Epoch 44/50
+
+Epoch 44: val_loss improved from 1.70634 to 1.61494, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 43: Learning rate was 8.5209e-05.
+234/234 - 392s - loss: 1.7623 - accuracy: 0.7480 - val_loss: 1.6149 - val_accuracy: 0.7818 - 392s/epoch - 2s/step
+Epoch 45/50
+
+Epoch 45: val_loss improved from 1.61494 to 1.60500, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 44: Learning rate was 7.41708e-05.
+234/234 - 391s - loss: 1.7438 - accuracy: 0.7532 - val_loss: 1.6050 - val_accuracy: 0.7808 - 391s/epoch - 2s/step
+Epoch 46/50
+
+Epoch 46: val_loss did not improve from 1.60500
+
+Epoch 45: Learning rate was 6.29463e-06.
+234/234 - 361s - loss: 1.7436 - accuracy: 0.7534 - val_loss: 1.6607 - val_accuracy: 0.7788 - 361s/epoch - 2s/step
+Epoch 47/50
+
+Epoch 47: val_loss improved from 1.60500 to 1.54273, saving model to ./models/Deeplabv3Plus_2x_OS8_50e_32b_Poly_SGD_wBCE_Tvernsky_milestones_warmup+DA_mid+DO_mild
+
+Epoch 46: Learning rate was 5.14933e-06.
+234/234 - 381s - loss: 1.7544 - accuracy: 0.7516 - val_loss: 1.5427 - val_accuracy: 0.7859 - 381s/epoch - 2s/step
+Epoch 48/50
+
+Epoch 48: val_loss did not improve from 1.54273
+
+Epoch 47: Learning rate was 3.97472e-06.
+234/234 - 357s - loss: 1.7398 - accuracy: 0.7538 - val_loss: 1.5525 - val_accuracy: 0.7820 - 357s/epoch - 2s/step
+Epoch 49/50
+
+Epoch 49: val_loss did not improve from 1.54273
+
+Epoch 48: Learning rate was 2.75946e-06.
+234/234 - 359s - loss: 1.7317 - accuracy: 0.7556 - val_loss: 1.5486 - val_accuracy: 0.7818 - 359s/epoch - 2s/step
+Epoch 50/50
+
+Epoch 50: val_loss did not improve from 1.54273
+
+Epoch 49: Learning rate was 1.47876e-06.
+234/234 - 357s - loss: 1.7498 - accuracy: 0.7505 - val_loss: 1.5487 - val_accuracy: 0.7818 - 357s/epoch - 2s/step
+Training completed
+---------------------------------------------------------
+---------------------------------------------------------
+Script completed

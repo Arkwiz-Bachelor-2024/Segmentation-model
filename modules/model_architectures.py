@@ -10,23 +10,122 @@ https://keras.io/examples/vision/oxford_pets_image_segmentation/
 """
 
 
+def UNET_model_skip(img_size, num_classes):
+
+    def decoder_block(inputs, skip_features, num_filters):
+
+        # Upsampling with 2x2 filter
+        x = layers.Conv2DTranspose(num_filters, (2, 2), strides=2, padding="valid")(
+            inputs
+        )
+
+        # Copy and crop the skip features
+        # to match the shape of the upsampled input
+        skip_features = layers.resize(skip_features, size=(x.shape[1], x.shape[2]))
+
+        x = layers.Concatenate()([x, skip_features])
+
+        # Convolution with 3x3 filter followed by ReLU activation
+        x = tf.keras.layers.Conv2D(num_filters, 3, padding="valid")(x)
+        x = tf.keras.layers.Activation("relu")(x)
+
+        # Convolution with 3x3 filter followed by ReLU activation
+        x = tf.keras.layers.Conv2D(num_filters, 3, padding="valid")(x)
+        x = tf.keras.layers.Activation("relu")(x)
+
+        return x
+
+    inputs = keras.Input(shape=img_size + (3,))
+
+    ### [First half of the network: downsampling inputs] ###
+
+    # Entry block
+    x = layers.Conv2D(128, 3, strides=1, padding="same")(inputs)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+
+    x = layers.Conv2D(128, 3, strides=1, padding="same")(inputs)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+
+    # Intialize list to store skip connections
+    skip_connections = []
+    skip_connections.append(x)  # Adds the first skip connection
+
+    x = layers.MaxPooling2D(3, strides=2, padding="same")(x)
+
+    previous_block_activation = x  # Set aside residual
+
+    # Blocks 1, 2, 3 are identical apart from the feature depth.
+    for filters in [256, 512, 1024]:
+
+        x = layers.Activation("relu")(x)
+        x = layers.SeparableConv2D(filters, 3, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+
+        x = layers.Activation("relu")(x)
+        x = layers.SeparableConv2D(filters, 3, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+
+        # Adds the skip connection except for the bottleneck
+        if filters != 1024:
+            skip_connections.append(x)  # Add this skip connection to the list
+
+            x = layers.MaxPooling2D(3, strides=2, padding="same")(x)
+
+            # Project residual
+            residual = layers.Conv2D(filters, 1, strides=2, padding="same")(
+                previous_block_activation
+            )
+            x = layers.add([x, residual])  # Add back residual
+            previous_block_activation = x  # Set aside next residual
+
+    ### [Second half of the network: upsampling inputs] ###
+
+    for filters in [512, 256, 128]:
+
+        # x = layers.UpSampling2D(2)(x)
+
+        # Adds the skip connection after bottleneck
+        # x = layers.Concatenate(axis=-1)([x, skip_connections.pop()])
+
+        x = layers.Activation("relu")(x)
+        x = layers.Conv2DTranspose(filters, 2, 2, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+
+        x = layers.Activation("relu")(x)
+        x = layers.conv2dtranspose(filters, 3, padding="same")(x)
+        x = layers.batchnormalization()(x)
+
+        # Project residual
+        residual = layers.UpSampling2D(2)(previous_block_activation)
+        residual = layers.Conv2D(filters, 1, padding="same")(residual)
+        x = layers.add([x, residual])  # Add back residual
+        previous_block_activation = x  # Set aside next residual        # Adds the skip connection after bottleneck
+
+    # Add a per-pixel classification layer
+    outputs = layers.Conv2D(num_classes, 3, activation="softmax", padding="same")(x)
+
+    # Define the model
+    model = keras.Model(inputs, outputs)
+
+    return model
+
+
 def UNET_model(img_size, num_classes):
     inputs = keras.Input(shape=img_size + (3,))
 
     ### [First half of the network: downsampling inputs] ###
 
     # Entry block
-    x = layers.Conv2D(32, 3, strides=2, padding="same")(inputs)
+    x = layers.Conv2D(256, 3, strides=2, padding="same")(inputs)
     x = layers.BatchNormalization()(x)
     x = layers.Activation("relu")(x)
 
     previous_block_activation = x  # Set aside residual
 
-    skip_connections = []
-    skip_connections.append(x)  # Adds the first skip connection
-
     # Blocks 1, 2, 3 are identical apart from the feature depth.
-    for filters in [64, 128, 256]:
+    for filters in [512, 1024, 2048]:
         x = layers.Activation("relu")(x)
         x = layers.SeparableConv2D(filters, 3, padding="same")(x)
         x = layers.BatchNormalization()(x)
@@ -42,12 +141,11 @@ def UNET_model(img_size, num_classes):
             previous_block_activation
         )
         x = layers.add([x, residual])  # Add back residual
-        skip_connections.append(x)  # Add this skip connection to the list
         previous_block_activation = x  # Set aside next residual
 
     ### [Second half of the network: upsampling inputs] ###
 
-    for filters in [256, 128, 64, 32]:
+    for filters in [2048, 1024, 512, 256]:
 
         x = layers.Activation("relu")(x)
         x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
@@ -65,16 +163,6 @@ def UNET_model(img_size, num_classes):
         x = layers.add([x, residual])  # Add back residual
         previous_block_activation = x  # Set aside next residual
 
-        upsampled_skip = layers.UpSampling2D(2)(skip_connections.pop())
-
-        # Adds the skip connection
-        x = layers.Concatenate(axis=-1)([x, upsampled_skip])
-
-        # Convolutional block after adding skip connection
-        x = layers.Conv2D(filters, 3, padding="same")(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.Activation("relu")(x)
-
     # Add a per-pixel classification layer
     outputs = layers.Conv2D(num_classes, 3, activation="softmax", padding="same")(x)
 
@@ -84,7 +172,7 @@ def UNET_model(img_size, num_classes):
     return model
 
 
-def ResNet_model(img_size, num_classes):
+def UNet_model_skip_backbone(img_size, num_classes):
     inputs = keras.Input(shape=img_size + (3,))
 
     encoder = keras.applications.ResNet50(
@@ -96,28 +184,53 @@ def ResNet_model(img_size, num_classes):
 
     x = encoder.output
 
-    # Dropout
-    x = layers.Dropout(0.5)(x)
-
-    # Decoder/Upsampling
-    for filters in [256, 128, 64, 32]:
-        x = layers.Activation("relu")(x)
-        x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
-        x = layers.BatchNormalization()(x)
-
-        x = layers.Activation("relu")(x)
-        x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
-        x = layers.BatchNormalization()(x)
-
-        x = layers.UpSampling2D(2)(x)
-
-    # Additional upsampling step to match the target dimension of 512x512
+    # Upsample the output to retain as much semantic details as possible
     x = layers.UpSampling2D(2)(x)
-    x = layers.Conv2DTranspose(32, 3, padding="same")(
-        x
-    )  # Additional convolution for smoothing
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
+
+    # Reduce size of feature maps to 512
+    x = layers.Conv2D(1024, 1, padding="same")(x)
+
+    # Upsample skip connections to fit the decoder
+    # Decoder/Upsampling
+    for filters in [1024, 512, 256, 128]:
+
+        match filters:
+            case 512:
+                # 16x16x512
+                skip = encoder.get_layer("conv5_block3_2_relu").output
+            case 256:
+                # 32x32x256
+                skip = encoder.get_layer("conv4_block6_2_relu").output
+            case 128:
+                # 64x64x128
+                skip = encoder.get_layer("conv3_block4_2_relu").output
+            case 64:
+                # 128x128x64
+                skip = encoder.get_layer("conv2_block3_2_relu").output
+
+        previous_block_activation = x  # Set aside next residual
+
+        # Adds the skip connection
+        if filters != 512:
+            skip = layers.UpSampling2D(4)(skip)
+            x = layers.Concatenate()([x, skip])
+
+        x = layers.Activation("relu")(x)
+        x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+
+        x = layers.Activation("relu")(x)
+        x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
+        x = layers.BatchNormalization()(x)
+
+        if filters != 32:
+            x = layers.UpSampling2D(2)(x)
+            residual = layers.UpSampling2D(2)(previous_block_activation)
+            residual = layers.Conv2D(filters, 1, padding="same")(residual)
+
+            # Project residual
+            x = layers.add([x, residual])  # Add back residual
+            previous_block_activation = x  # Set aside next residual
 
     # Add a per-pixel classification layer
     outputs = layers.Conv2D(num_classes, 3, activation="softmax", padding="same")(x)
@@ -132,35 +245,8 @@ def ResNet_model(img_size, num_classes):
 # TODO tvernsky loss, crop size, multi-scaling, FCRF?, DPC?
 def DeeplabV3Plus(img_size, num_classes):
 
-    def resnet_block(x, filters, kernel_size, stride=1, dilation_rate=1):
-        f1, f2, f3 = filters
-
-        # Shortcut path
-        s = layers.Conv2D(f3, (1, 1), strides=stride, padding="same")(x)
-        s = layers.BatchNormalization()(s)
-
-        # Main path
-        x = layers.Conv2D(f1, (1, 1), strides=stride, padding="same")(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.ReLU()(x)
-
-        x = layers.Conv2D(f2, kernel_size, padding="same", dilation_rate=dilation_rate)(
-            x
-        )
-        x = layers.BatchNormalization()(x)
-        x = layers.ReLU()(x)
-
-        x = layers.Conv2D(f3, (1, 1), padding="same")(x)
-        x = layers.BatchNormalization()(x)
-
-        # Add shortcut path to the main path
-        x = layers.Add()([x, s])
-        x = layers.ReLU()(x)
-
-        return x
-
     def convolution_block(
-        block_input, num_filters=256, kernel_size=3, dilation_rate=1, use_bias=False
+        block_input, num_filters=512, kernel_size=3, dilation_rate=1, use_bias=False
     ):
         x = layers.Conv2D(
             num_filters,
@@ -205,7 +291,6 @@ def DeeplabV3Plus(img_size, num_classes):
         input_tensor=preprocessed,
     )
 
-    # Freeze the layers up until conv block 2
     for layer in resnet50.layers:
         layer.trainable = False
 
